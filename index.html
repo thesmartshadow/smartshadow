@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>TaskFlow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --text: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --glow: rgba(99, 102, 241, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--background);
+            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 40px var(--glow);
+            animation: titleFloat 3s ease-in-out infinite;
+        }
+
+        .smart-input-grid {
+            display: grid;
+            grid-template-columns: 1fr 160px 140px 120px 100px;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .smart-input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .nexus-input {
+            padding: 1rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .nexus-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 30px var(--glow);
+        }
+
+        .quantum-btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .quantum-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255,255,255,0.3), 
+                transparent);
+            transform: rotate(45deg);
+            animation: btnFlow 3s linear infinite;
+        }
+
+        .hologram-card {
+            background: linear-gradient(145deg, 
+                rgba(255,255,255,0.05), 
+                rgba(255,255,255,0.01));
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .hologram-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg,
+                transparent,
+                var(--primary),
+                var(--secondary),
+                transparent);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .task-quantum {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            cursor: grab;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: quantumEntrance 0.6s ease;
+        }
+
+        .task-quantum:hover {
+            transform: translateY(-5px) rotateX(5deg);
+            box-shadow: 0 10px 30px rgba(var(--primary), 0.15);
+        }
+
+        .quantum-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            margin-left: 1rem;
+            position: relative;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .quantum-checkbox:checked {
+            background: var(--primary);
+            animation: quantumSpin 0.6s ease;
+        }
+
+        .quantum-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .stats-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-orb {
+            background: linear-gradient(45deg, var(--surface), var(--background));
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-orb::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(var(--primary), 0.1), 
+                transparent);
+            transform: rotate(45deg);
+            animation: statOrb 6s linear infinite;
+        }
+
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0) rotateX(0); }
+            50% { transform: translateY(-10px) rotateX(10deg); }
+        }
+
+        @keyframes btnFlow {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        @keyframes quantumSpin {
+            0% { transform: rotate(0deg) scale(0.8); }
+            100% { transform: rotate(720deg) scale(1); }
+        }
+
+        @keyframes quantumEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(30px) rotateX(-30deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        @keyframes statOrb {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .task-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .task-quantum:hover .task-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .edit-btn { color: var(--primary); }
+        .delete-btn { color: var(--danger); }
+        .flag-btn { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1 class="main-title">🪐 TaskFlow</h1>
+        </header>
+
+        <div class="smart-input-grid">
+            <input type="text" 
+                   class="nexus-input" 
+                   id="taskInput" 
+                   placeholder="مهمة جديدة..."
+                   data-cy="task-input">
+            <input type="date" 
+                   class="nexus-input" 
+                   id="taskDate">
+            <select class="nexus-input" id="taskPriority">
+                <option value="low">⬇️ منخفضة</option>
+                <option value="medium">⏺️ متوسطة</option>
+                <option value="high">⬆️ عالية</option>
+            </select>
+            <input type="text"
+                   class="nexus-input"
+                   id="taskTags"
+                   placeholder="الوسوم (مفصولة بفاصلة)">
+            <button class="quantum-btn" onclick="taskManager.createTask()">
+                <span>⚡</span>
+                إنشاء
+            </button>
+        </div>
+
+        <div class="hologram-card">
+            <div class="tasks-grid" id="tasksList"></div>
+        </div>
+
+        <div class="stats-matrix">
+            <div class="stat-orb">
+                <h3>📊 الإحصائيات الكمية</h3>
+                <div id="quantumStats"></div>
+            </div>
+            <div class="stat-orb">
+                <h3>⏳ الخط الزمني</h3>
+                <div id="timeLine"></div>
+            </div>
+            <div class="stat-orb">
+                <h3>🎯 الإنجازات</h3>
+                <div id="achievements"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class QuantumTaskManager {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('quantumTasks')) || [];
+                this.init();
+            }
+
+            init() {
+                this.render();
+                this.updateStats();
+            }
+
+            createTask() {
+                const input = document.getElementById('taskInput');
+                if (!input.value.trim()) return this.quantumShake(input);
+
+                const newTask = {
+                    id: Date.now(),
+                    text: input.value,
+                    date: document.getElementById('taskDate').value,
+                    priority: document.getElementById('taskPriority').value,
+                    tags: document.getElementById('taskTags').value.split(','),
+                    completed: false,
+                    flagged: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.tasks.push(newTask);
+                this.save();
+                this.animateCreation(newTask.id);
+                this.clearInputs();
+            }
+
+            animateCreation(id) {
+                anime({
+                    targets: `[data-task-id="${id}"]`,
+                    opacity: [0, 1],
+                    scale: [0.8, 1],
+                    rotateX: ['-90deg', '0deg'],
+                    duration: 800,
+                    easing: 'easeOutElastic(1, .6)'
+                });
+            }
+
+            toggleTask(id) {
+                this.tasks = this.tasks.map(task => 
+                    task.id === id ? {...task, completed: !task.completed} : task
+                );
+                this.save();
+                this.animateToggle(id);
+            }
+
+            animateToggle(id) {
+                anime({
+                    targets: `[data-task-id="${id}"]`,
+                    scale: [1, 1.1, 1],
+                    rotateY: ['0deg', '360deg'],
+                    duration: 600,
+                    easing: 'easeInOutQuad'
+                });
+            }
+
+            deleteTask(id) {
+                anime({
+                    targets: `[data-task-id="${id}"]`,
+                    opacity: 0,
+                    scale: 0.5,
+                    marginLeft: '100%',
+                    duration: 400,
+                    complete: () => {
+                        this.tasks = this.tasks.filter(task => task.id !== id);
+                        this.save();
+                    }
+                });
+            }
+
+            save() {
+                localStorage.setItem('quantumTasks', JSON.stringify(this.tasks));
+                this.render();
+                this.updateStats();
+            }
+
+            render() {
+                const tasksList = document.getElementById('tasksList');
+                tasksList.innerHTML = this.tasks.map(task => `
+                    <div class="task-quantum ${task.completed ? 'completed' : ''}" 
+                         data-task-id="${task.id}">
+                        <input type="checkbox" 
+                               class="quantum-checkbox"
+                               ${task.completed ? 'checked' : ''}
+                               onchange="taskManager.toggleTask(${task.id})">
+                        <div class="task-content">
+                            <div class="task-text">${task.text}</div>
+                            <div class="task-meta">
+                                <span>📅 ${task.date}</span>
+                                ${task.tags.map(tag => `
+                                    <span class="tag">🏷️ ${tag.trim()}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="action-btn flag-btn" 
+                                    onclick="taskManager.toggleFlag(${task.id})">
+                                ${task.flagged ? '🚩' : '⚐'}
+                            </button>
+                            <button class="action-btn edit-btn" 
+                                    onclick="taskManager.editTask(${task.id})">
+                                ✏️
+                            </button>
+                            <button class="action-btn delete-btn" 
+                                    onclick="taskManager.deleteTask(${task.id})">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const stats = {
+                    total: this.tasks.length,
+                    completed: this.tasks.filter(t => t.completed).length,
+                    flagged: this.tasks.filter(t => t.flagged).length
+                };
+
+                document.getElementById('quantumStats').innerHTML = `
+                    <div>المهام الكلية: ${stats.total}</div>
+                    <div>المكتملة: ${stats.completed}</div>
+                    <div>المميزة: ${stats.flagged}</div>
+                `;
+            }
+
+            quantumShake(element) {
+                anime({
+                    targets: element,
+                    translateX: [-15, 15, -10, 10, 0],
+                    duration: 600,
+                    easing: 'easeInOutQuad'
+                });
+            }
+
+            clearInputs() {
+                ['taskInput', 'taskDate', 'taskTags'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+            }
+        }
+
+        const taskManager = new QuantumTaskManager();
+        window.taskManager = taskManager;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            taskManager.init();
+        });
+    </script>
+</body>
+</html>
