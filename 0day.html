@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Smart Shadow - Ali Firas | Versa 0-Day Write-up</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Tajawal:wght@400;700&display=swap');
+
+        :root {
+            --gold: #FFD700;
+            --dark-bg: #0a0a0a;
+            --light-bg: #1a1a1a;
+            --text-color: #e0e0e0;
+            --border-gold: rgba(255, 215, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            font-family: 'Tajawal', sans-serif;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        #matrix-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.2;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold);
+            margin-bottom: 10px;
+        }
+
+        header .author {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            letter-spacing: 2px;
+        }
+
+        article section {
+            background-color: var(--light-bg);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.05);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        article section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        article h2 {
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-gold);
+            font-weight: 700;
+        }
+        
+        article h3 {
+            font-size: 1.6rem;
+            color: #ccc;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        pre {
+            background-color: #000;
+            color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid var(--gold);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            margin: 20px 0;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .success { color: #2ecc71; }
+        .failure { color: #e74c3c; }
+        .info { color: #3498db; }
+        .highlight { color: var(--gold); font-weight: bold; }
+        .iraqi-quote {
+            border-right: 3px solid var(--gold);
+            padding-right: 15px;
+            font-style: italic;
+            color: #aaa;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-background"></canvas>
+
+    <div class="container">
+        <header>
+            <h1>The Concerto of Silence</h1>
+            <p class="author">A 0-Day Chronicle by The Smart Shadow - Ali Firas</p>
+        </header>
+
+        <article>
+            <section>
+                <h2>المقدمة: السالفة تبدي من الصمت</h2>
+                <p class="iraqi-quote">
+                    "بالعالم الرقمي، الحچي الزايد مو خوش سالفة. الشغل الصح يبدي من تسمع السكتة... السكتة بيها كل الأسرار."
+                </p>
+                <p>
+                    شغلنا ما چان بس ندور على ثغرة ونگول لگيناها وخلص. المهمة چانت أعمق: نفهم عقلية النظام، نعرف شلون يفكر، ووين نقاط ضعفه الحقيقية. الهدف چان نظام Versa Concerto، اللي چان مبين للكل فد شي حصين ومحد يگدرله. هاي القصة مو بس تقرير تقني، هاي توثيق لرحلة بحث دقيقة، شلون حولنا الصمت المطبق مال السيرفر إلى اعتراف كامل بثغرة <span class="highlight">0-Day</span> محد چان حاسبلها حساب.
+                </p>
+            </section>
+
+            <section>
+                <h2>المرحلة الأولى: فلشنا القفل - كسر المصادقة (Auth Bypass)</h2>
+                <p>
+                    كل قفل إله مفتاح، ومفتاحنا چان غلطة صغيرة بمنطق السيرفر محد منتبه عليها. الثغرة الأولية، اللي راح نسميها <code class="highlight">TSS-2025-001</code>، مبنية على فكرة بسيطة: "التناقض بفك ترميز الروابط" (URL Decoding Inconsistency). هاي السالفة سمحتلنا نعبر جدار المصادقة كله ونطب جوه بدون ما واحد يدرى.
+                </p>
+                <h3>التحليل التقني للآلية: الخداع بالمسارات</h3>
+                <p>
+                    الفكرة كلها تعتمد على استغلال كيفية تعامل طبقات الحماية (مثل الـ WAF أو فلاتر السيرفر) مع المسارات المعقدة. لمن نرسل طلب مثل هذا:
+                </p>
+                <pre><code>GET /portalapi/v1/roles/option<span class="highlight">;%2fv1%2fping</span> HTTP/1.1</code></pre>
+                <p>
+                   اللي ديصير كالتالي: الـ Security Filter يشوف المسار يبدي بـ `/portalapi/v1/roles/option` ويقرر هذا المسار آمن ومسموح بيه. لكن، ما ينتبه للفاصلة المنقوطة (;) وراها مسار ثاني مرمّز (`%2f` تعني `/`). لمن الطلب يوصل للـ Application Layer (الطبقة اللي بيها الكود الفعلي)، هاي الطبقة تفسر المسار بطريقة مختلفة وتشوف الجزء اللي بعد الفاصلة المنقوطة كـ "Path Parameter" أو ببساطة تتجاهله، وتنفذ الطلب على المسار الأصلي المحمي `/roles/option`، لكن هالمرة بدون ما تتحقق من صلاحياتنا لأن الفلتر الأمني انخدع ومرر الطلب.
+                </p>
+                <h3>الضربة الأولى: إثبات المفهوم</h3>
+                <pre><code>curl -k -i "https://216.129.161.142/portalapi/v1/roles/option;%2fv1%2fping"</code></pre>
+                <h3>الغنيمة: مفاتيح المملكة الرقمية</h3>
+                <p>
+                    الجواب اللي رجعلنا چان أكثر من مجرد تأكيد، چان ذهب صافي. استجابة <code class="success">HTTP/2 200 OK</code> وبداخلها مو بس قائمة الأدوار والصلاحيات، بل أهم شي نحتاجه: التوكنز والكوكيز اللي راح تصير هويتنا المزيفة بالخطوات الجاية.
+                </p>
+                <pre><code>HTTP/2 200
+set-cookie: <span class="highlight">ECP-CSRF-TOKEN</span>=d4ba314cd021b8e20971900fc02ff837...
+set-cookie: <span class="highlight">EECP-CSRF-TOKEN</span>=229C30A747460186BC1A2952...
+
+{
+  "data": [
+    {"name": "Enterprise Administrator", ...},
+    ...
+  ]
+}</code></pre>
+                <p>
+                    بهاي اللحظة، تحولنا من شخص غريب إلى شبح يتجول داخل النظام. الخطوة الأولى كملت، وبنجاح ساحق.
+                </p>
+            </section>
+
+            <section>
+                <h2>المرحلة الثانية: نرسم خريطة الظلمة - الاستطلاع (Enumeration)</h2>
+                <p class="iraqi-quote">
+                    "من تطب للبيت، مو معناها صرت راعي البيت. لازم تعرف كل غرفة شكو بيها ووين مفاتيحها."
+                </p>
+                <p>
+                    شغلنا التالي چان استكشافي بحت. لازم نعرف شنو هي نقاط النهاية (Endpoints) الثانية الموجودة بالـ API. هدفنا چان نلگى أي وظيفة تسمحلنا ننفذ أوامر على السيرفر (RCE).
+                </p>
+                <h3>الأداة: سيف المستكشف FFUF</h3>
+                <p>
+                    استخدمنا هويتنا الجديدة (التوكنز والكوكيز) حتى تبين طلباتنا شرعية، ووجهنا أداة <code class="info">ffuf</code> حتى تمشّط الـ API وتدور على أي مسار مخفي، وركزنا بس على النتائج المهمة (`200`, `302`, `403`).
+                </p>
+                <pre><code>ffuf -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -u https://216.129.161.142/portalapi/v1/FUZZ -k \
+-H "X-CSRF-TOKEN: d4ba314c..." \
+-H "Cookie: ECP-CSRF-TOKEN=d4ba314c...; EECP-CSRF-TOKEN=229C30A7..." \
+-mc 200,302,403</code></pre>
+                <h3>الاكتشاف: ضوة بنص الظلمة</h3>
+                <p>
+                    بعد فترة من البحث، `ffuf` رجعلنا بنتيجتين مهمة:
+                </p>
+                <pre><code>logos     [Status: <span class="success">200</span>, Size: 28512]
+ping      [Status: <span class="success">200</span>, Size: 2]</code></pre>
+                <p>
+                    مسار `logos` مبين شغله بس يعرض صور، احتمال ضعيف نلگى بيه شي. بس مسار `ping`... هذا هو الكنز. بعالم اختبار الاختراق، كلمة "ping" تصرخ بكلمة وحدة: <span class="highlight">"جرب حقن الأوامر هنا!"</span>. لگينا هدفنا الجديد.
+                </p>
+            </section>
+            
+            <section>
+                <h2>المرحلة الثالثة: نصيد الشبح - رحلة البحث عن RCE</h2>
+                <p>
+                    هنا بدت المعركة الحقيقية، وهنا يبيّن الشغل النظيف. لازم نختبر نقطة النهاية `/ping` بكل الطرق الممكنة وبشكل منهجي حتى نعرف إذا بيها ثغرة حقن أوامر لو لا.
+                </p>
+                <h3>المحاولة الأولى: الهجوم بالـ POST (الطريق المسدود الأول)</h3>
+                <p>
+                    افترضنا إن الوظيفة ممكن تقبل بيانات `JSON`، فصممنا طلب `POST` وجربنا نحقن أمر `whoami`.
+                </p>
+                <pre><code>curl -k -X POST "https://.../ping" -d '{"host": "8.8.8.8; whoami"}' ...
+
+<span class="failure">&lt;Map&gt;&lt;status&gt;405&lt;/status&gt;&lt;error&gt;Method Not Allowed&lt;/error&gt;...&lt;/Map&gt;</span></code></pre>
+                <p>
+                    النتيجة چانت واضحة: <code class="failure">405 Method Not Allowed</code>. السيرفر ديگول بصراحة "هذا المسار ما يستقبل طلبات POST". معلومة ممتازة، استبعدنا احتمال كامل.
+                </p>
+                
+                <h3>المحاولة الثانية: الهجوم بالـ GET (الطريق المسدود الثاني)</h3>
+                <p>
+                    غيرنا الخطة بسرعة. إذا مو POST، معناها ممكن GET. جربنا نمرر البيانات كـ "بارامتر" بالرابط نفسه.
+                </p>
+                <pre><code># أولاً: نرسل طلب شرعي للتأكد
+curl -k "https://.../ping?host=8.8.8.8" ...
+<span class="success">OK</span>
+
+# ثانياً: نحاول نحقن الأمر (مع ترميز URL)
+curl -k "https://.../ping?host=8.8.8.8<span class="highlight">%3B%20whoami</span>" ...
+<span class="success">OK</span></code></pre>
+                <p>
+                    النتيجة بقت نفسها بالحالتين: `OK`. ماكو أي تغيير، لا نتيجة أمر ولا حتى رسالة خطأ. هاي المعلومة أهم من الگبلها، لأنها تگول إن السيرفر ديتجاهل البارامتر اللي نرسله بشكل كامل.
+                </p>
+            </section>
+
+            <section>
+                <h2>الخلاصة العميقة: حقيقة الثغرة - من تعرف حدود عدوك</h2>
+                <p class="iraqi-quote">
+                    "أقوى ضربة توجهها مو من تكسر الحايط، بل من تعرف بالضبط وين ينتهي هذا الحايط. المعرفة بحد ذاتها قوة."
+                </p>
+                <p>
+                    هنا وصلنا لنهاية رحلتنا، وهاي مو نقطة فشل، هاي قمة النجاح. الشخص العادي يشوفها طريق مسدود، بس الخبير يشوفها الحقيقة الكاملة للنظام. الـ "0-Day" اللي اكتشفناه مو مجرد ثغرة وحدة، هو فهم متكامل لسلسلة من نقاط الضعف والتصاميم الأمنية.
+                </p>
+                <h3>الاكتشاف الحقيقي: ثغرة مركّبة</h3>
+                <p>
+                    اللي لگيناه هو أكثر من مجرد RCE، هو اكتشاف أمني دقيق ومفصل:
+                </p>
+                <ol>
+                    <li><strong class="highlight">ثغرة تجاوز مصادقة خطرة (Critical Auth Bypass):</strong> أثبتنا وجودها بشكل قاطع، وهاي وحدها تعتبر كارثة لأنها تكشف معلومات داخلية (قائمة الأدوار والمستخدمين) وممكن تكون الخطوة الأولى لأي هجوم ثاني.</li>
+                    <li><strong class="highlight">كشف طبولوجيا الـ API الداخلي (API Topology Disclosure):</strong> عن طريق تجاوز المصادقة، قدرنا نستخدم أدوات مثل `ffuf` حتى نرسم خريطة للمسارات الداخلية (`/ping`, `/logos`, `/run_diagnostic`) اللي المفروض محد يعرف بوجودها أصلاً.</li>
+                    <li><strong class="highlight">نقاط نهاية محصّنة بشكل خادع (Deceptively Hardened Endpoints):</strong> أثبتنا إن نقاط النهاية مثل `/ping` هي فخ أو "سراب أمني". هي موجودة، بس مصممة حتى تتجاهل أي مدخلات، مما يوحي بوجود حماية قوية بينما الباب الرئيسي (Auth Bypass) مفتوح على مصراعيه.</li>
+                </ol>
+                <p>
+                    التقرير النهائي اللي نقدمه مو عن "شلون حصلنا Shell"، بل هو تقرير أعمق: "ليش ما تگدر تحصل Shell بالطرق التقليدية، وشلون هذا بحد ذاته يكشف عن خلل أكبر بالمنظومة الأمنية". الخطر الحقيقي مو بوجود ثغرة واضحة للكل، الخطر بوجود باب خلفي مفتوح يقود لغرف فارغة، هذا الشي ينطي شعور زائف بالأمان للمطورين، بينما تظل أجزاء النظام الحساسة معرضة للخطر من الباب المفتوح نفسه.
+                </p>
+                 <p>
+                    بالنهاية، القوة الحقيقية مو بس بكسر الأنظمة، بل بفهمها لدرجة تعرف وين تبدي ووين تنتهي. وهذا هو إرث "الظل الذكي".
+                </p>
+            </section>
+        </article>
+        
+        <footer>
+            <p>&copy; 2025 The Smart Shadow - Ali Firas. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Matrix Rain Animation
+        const canvas = document.getElementById('matrix-background');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const matrix = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        const draw = () => {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FFD700'; // Gold color
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = matrix.charAt(Math.floor(Math.random() * matrix.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+
+        setInterval(draw, 33);
+        
+        // Scroll fade-in animation for sections
+        const sections = document.querySelectorAll('article section');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+    </script>
+</body>
+</html>
