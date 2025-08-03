@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل ثغرة Path Traversal في Grafana (CVE-2025-4123)</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Arabic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles and animations */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #111111;
+            color: #e0e0e0;
+        }
+
+        /* Gold color variables for consistency */
+        :root {
+            --gold: #daa520;
+            --dark-gold: #b8860b;
+        }
+
+        /* Styling for headings with a golden touch */
+        .title-gold {
+            color: var(--gold);
+        }
+
+        /* Styling for code blocks */
+        pre {
+            background-color: #1f1f1f;
+            border-right: 3px solid var(--gold);
+            color: #f0f0f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            direction: ltr; /* Code is Left-to-Right */
+            position: relative;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Animation classes for scroll effects */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .scroll-animate.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Gold gradient for the main title */
+        .gold-gradient-text {
+            background: linear-gradient(90deg, #ffd700, #daa520, #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        /* Copy button for code blocks */
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--gold);
+            color: #111;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            opacity: 1;
+        }
+        
+        .copy-btn-feedback {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#111111]">
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+
+        <!-- Header Section -->
+        <header class="text-center mb-12 scroll-animate">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 gold-gradient-text">
+                تحليل ثغرة Grafana
+            </h1>
+            <p class="text-lg sm:text-xl text-gray-400">CVE-2025-4123: Path Traversal to RCE Chain</p>
+            <p class="text-md text-gray-500 mt-4">مقدم من: علي فراس</p>
+            <p class="text-xl font-bold mt-2 title-gold">المكافأة: $2,000</p>
+        </header>
+
+        <!-- Image Section -->
+        <figure class="max-w-4xl mx-auto mb-16 scroll-animate">
+            <img src="https://i.imgur.com/7R8TxYb.jpeg" alt="صورة توضيحية للثغرة" class="w-full h-auto rounded-lg shadow-2xl border-4 border-[#daa520]">
+        </figure>
+
+        <!-- Main Content Article -->
+        <article class="max-w-4xl mx-auto space-y-12">
+
+            <!-- Section 1: Executive Summary -->
+            <section class="scroll-animate">
+                <h2 class="text-3xl font-bold mb-4 border-r-4 border-[#daa520] pr-4 title-gold">1. الملخص التنفيذي</h2>
+                <p class="text-lg leading-relaxed text-gray-300">
+                    لكينه ثغرة أمنية كلش خطرة من نوع <strong>اجتياز المسار (Path Traversal)</strong> بمنصة Grafana. هاي الثغرة تخلي المهاجم، عن طريق طلب ملغوم ومُرتب يندز لنقطة نهاية (Endpoint) عامة، يعبر كل دفاعات التحقق من مسار الـ URL. هذا الخلل الأمني ممكن نستغله حتى ننفذ سلسلة هجمات خطرة، تبدي <strong>بإعادة توجيه مفتوحة (Open Redirect)</strong>، وهاي ممكن نصعدها لهجوم <strong>البرمجة النصية عبر المواقع (XSS)</strong>، والأخطر من هذا كله، هجوم <strong>تزييف طلبات من جانب الخادم (SSRF)</strong>.
+                </p>
+                <p class="text-lg leading-relaxed text-gray-300 mt-4">
+                    تسلسل هاي الهجمات يفتحلنه الباب لسيناريوهات كارثية، مثل <strong>بوكة حسابات اليوزرات (Account Takeover)</strong>، و<strong>تسريب بيانات حساسة من الشبكة الداخلية</strong>، وتنفيذ طلبات ما مسموح بيها باسم السيرفر المصاب.
+                </p>
+            </section>
+
+            <!-- Section 2: Technical Analysis -->
+            <section class="scroll-animate">
+                <h2 class="text-3xl font-bold mb-4 border-r-4 border-[#daa520] pr-4 title-gold">2. التحليل الفني للثغرة</h2>
+                <p class="text-lg leading-relaxed text-gray-300 mb-6">
+                    أصل المشكلة هو إن تطبيق Grafana يفشل بمعالجة وتنظيف (Sanitize) مدخلات اليوزر بمسار الـ URL بالشكل الصحيح بنقطة النهاية <code>/public/</code>. المهاجم هنا يستخدم تسلسلات اجتياز الدليل (Directory Traversal Sequences) مثل <code>../</code> (بالترميز تصير <code>%2f..</code>) حتى يطلع من المسار المحدد ويتحكم بالوجهة النهائية للطلب.
+                </p>
+                <h3 class="text-2xl font-semibold mb-3 title-gold">نقطة النهاية المصابة:</h3>
+                <pre><code>/public/..%2F%5coast.pro%2F%3f%2F..%2F..</code></pre>
+            </section>
+            
+            <!-- Section 3: Impact Analysis -->
+            <section class="scroll-animate">
+                <h2 class="text-3xl font-bold mb-4 border-r-4 border-[#daa520] pr-4 title-gold">3. تحليل التأثير وتسلسل الهجوم</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2 title-gold">المرحلة الأولى: إعادة التوجيه المفتوحة (Open Redirect)</h3>
+                        <p class="text-lg leading-relaxed text-gray-300">أبسط استغلال هو نجبر السيرفر يوجه اليوزر لموقع خارجي خبيث. هذا ممكن نستخدمه حتى نشن هجمات <strong>تصيد احتيالي (Phishing)</strong> حتى نبوك معلومات الدخول مال اليوزرات.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2 title-gold">المرحلة الثانية: البرمجة النصية عبر المواقع (XSS)</h3>
+                        <p class="text-lg leading-relaxed text-gray-300">نكدر نصعّد الثغرة حتى ننفذ هجوم XSS. إذا المهاجم وجه الضحية لصفحة ويب هو يسيطر عليها، يكدر يزرع كود JavaScript خبيث لسرقة جلسات المستخدمين (Session Hijacking).</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2 title-gold">المرحلة الثالثة (الأخطر): تزييف الطلبات من جانب الخادم (SSRF)</h3>
+                        <p class="text-lg leading-relaxed text-gray-300">هذا أخطر تأثير. السيرفر نفسه هو اللي ينفذ الطلبات. يعني نكدر نجبر سيرفر Grafana يدز طلبات لأي نظام هو يوصله، خصوصاً الأنظمة اللي بالشبكة الداخلية (Internal Network).</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 4: Proof of Concept -->
+            <section class="scroll-animate">
+                <h2 class="text-3xl font-bold mb-4 border-r-4 border-[#daa520] pr-4 title-gold">4. إثبات المفهوم (PoC)</h2>
+                <p class="text-lg leading-relaxed text-gray-300 mb-6">
+                    هذا الطلب يوضح شلون نثبت وجود الثغرة. بدل <code>TARGET.com</code> خلي الدومين المصاب.
+                </p>
+                <div class="relative">
+                    <pre id="poc-code"><code>curl -i -k -X GET "https://TARGET.com/public/..%2F%5coast.pro%2F%3f%2F..%2F.."</code></pre>
+                    <button class="copy-btn" onclick="copyToClipboard('poc-code', this)">نسخ</button>
+                    <div class="copy-btn-feedback">تم النسخ!</div>
+                </div>
+            </section>
+
+        </article>
+    </main>
+
+    <script>
+        // JavaScript for scroll animations and copy functionality
+
+        // 1. Scroll Animation Logic
+        const animatedElements = document.querySelectorAll('.scroll-animate');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1 // Trigger when 10% of the element is visible
+        });
+
+        animatedElements.forEach(el => {
+            observer.observe(el);
+        });
+
+        // 2. Copy to Clipboard Logic
+        function copyToClipboard(elementId, buttonElement) {
+            const preElement = document.getElementById(elementId);
+            const textToCopy = preElement.querySelector('code').innerText;
+            
+            // Using a temporary textarea to copy
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                // Visual feedback
+                const feedbackElement = buttonElement.nextElementSibling;
+                buttonElement.style.opacity = '0';
+                feedbackElement.style.opacity = '1';
+                setTimeout(() => {
+                    feedbackElement.style.opacity = '0';
+                    buttonElement.style.opacity = '0.7';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>
+
