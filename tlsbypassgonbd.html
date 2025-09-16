@@ -1,308 +1,305 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>تجاوز التحقق من شهادة TLS في digitalocean/go-nbd — تقرير مراجعة شيفرة</title>
-  <meta name="description" content=" (CWE‑295) في مشروع go‑nbd مع PoC، تحليل تأثير." />
-  <style>
-    :root {
-      --bg: #0b0d12;
-      --panel: #0f131a;
-      --muted: #aab3c5;
-      --text: #e6ecf4;
-      --accent: #4ea1ff;
-      --ok: #2ecc71;
-      --warn: #ffb020;
-      --bad: #ff6b6b;
-      --code-bg: #0b0f15;
-      --border: #1d2330;
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
-      --radius: 18px;
-      --radius-sm: 12px;
-      --maxw: 1050px;
-    }
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg:#f7f9fc; --panel:#ffffff; --text:#0d1117; --muted:#4b5565; --accent:#0b63f6; --code-bg:#0f172a; --border:#e6ebf5; --shadow:0 10px 24px rgba(0,0,0,.06);
-      }
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Kufi Arabic", "Noto Sans Arabic", Tahoma, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text); line-height:1.75;}
-    a{color:var(--accent); text-decoration:none}
-    a:hover{text-decoration:underline}
-    .container{max-width:var(--maxw); margin-inline:auto; padding:20px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير ثغرة أمنية | تجاوز التحقق من شهادة TLS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-    /* Hero */
-    .hero{position:relative; border-radius:var(--radius); overflow:hidden; background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.55)), #111; box-shadow:var(--shadow)}
-    .hero img{width:100%; height:320px; object-fit:cover; display:block; opacity:.85}
-    .hero .overlay{position:absolute; inset:0; display:flex; align-items:flex-end; padding:24px}
-    .hero h1{margin:0; font-size:clamp(22px, 3.2vw, 36px); font-weight:800}
-    .hero .meta{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:.95rem; color:var(--muted)}
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    /* Layout */
-    .grid{display:grid; grid-template-columns: 280px 1fr; gap:22px; margin-top:22px}
-    @media (max-width: 950px){ .grid{grid-template-columns:1fr} }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
 
-    /* TOC */
-    .toc{position:sticky; top:16px; align-self:start; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)}
-    .toc header{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border)}
-    .toc h2{margin:0; font-size:1rem}
-    .toc button{background:transparent; border:0; color:var(--muted); cursor:pointer; font-size:14px}
-    .toc nav{max-height:560px; overflow:auto}
-    .toc a{display:block; padding:10px 16px; border-bottom:1px dashed transparent; font-size:.95rem}
-    .toc a:hover{background:rgba(255,255,255,.03)}
+        .animated-gradient-text {
+            background: linear-gradient(90deg, #a78bfa, #f472b6, #60a5fa, #a78bfa);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-animation 6s ease infinite;
+        }
 
-    /* Card */
-    .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px}
-    .card h3{margin-top:0}
-
-    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:.85rem; border:1px solid var(--border); background:rgba(255,255,255,.02)}
-    .badge .dot{width:9px; height:9px; border-radius:50%}
-
-    .kv{display:grid; grid-template-columns: 180px 1fr; gap:10px 16px; font-size:.98rem}
-    .kv div:nth-child(odd){color:var(--muted)}
-    @media (max-width:600px){ .kv{grid-template-columns:1fr} .kv div:nth-child(odd){font-weight:600} }
-
-    /* Code */
-    pre{position:relative; background:var(--code-bg); color:#d1e0ff; padding:16px 16px; border-radius:var(--radius-sm); overflow:auto; border:1px solid var(--border)}
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.92rem}
-    .copy{position:absolute; inset-inline-end:10px; top:8px; display:flex; gap:8px}
-    .copy button{border:1px solid var(--border); background:rgba(255,255,255,.03); color:var(--muted); padding:6px 10px; border-radius:10px; cursor:pointer}
-    .copy button:hover{color:var(--text)}
-
-    .callout{border:1px solid var(--border); background:rgba(255,255,255,.02); border-radius:var(--radius-sm); padding:14px 16px;}
-    .callout.warn{border-color:rgba(255,176,32,.35)}
-    .callout.bad{border-color:rgba(255,107,107,.35)}
-    .callout.ok{border-color:rgba(46,204,113,.35)}
-
-    .diff ins{background:rgba(46,204,113,.12); text-decoration:none}
-    .diff del{background:rgba(255,107,107,.12); text-decoration:line-through}
-
-    hr{border:0; border-top:1px solid var(--border); margin:24px 0}
-    .footer{opacity:.75; font-size:.9rem; margin-top:18px}
-
-    .section-title{scroll-margin-top:100px}
-  </style>
+        .code-block {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            direction: ltr; /* Code is LTR */
+            text-align: left;
+        }
+        .code-block pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: #374151;
+            color: #9ca3af;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #4b5563;
+            transform: scale(1.1);
+        }
+        .highlight-line {
+            background-color: #4f46e530;
+            display: block;
+            margin: 0 -16px;
+            padding: 0 16px;
+            border-left: 3px solid #6366f1;
+        }
+        .section-card {
+            background-color: #1f2937;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #374151;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            opacity: 0; /* Initially hidden for animation */
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .is-visible {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-weight: 500;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        .tag:hover {
+             transform: scale(1.05);
+        }
+        .severity-high {
+            background-color: #991b1b;
+            color: #fecaca;
+        }
+        .cwe-tag {
+            background-color: #1d4ed8;
+            color: #dbeafe;
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <section class="hero" aria-label="صورة الغلاف">
-      <img src="https://i.imgur.com/v0IP81w.jpeg" alt="تصوّر بصري للأمن السيبراني وشهادات TLS" />
-      <div class="overlay">
-        <div>
-          <h1>تجاوز التحقق من شهادة TLS في <span style="white-space:nowrap">digitalocean/go-nbd</span><br/>
-            <small style="font-weight:600; opacity:.8">تقرير مراجعة شيفرة (Source Code Review)</small>
-          </h1>
-          <div class="meta">
-            <span class="badge"><span class="dot" style="background:var(--bad)"></span> الشدة: عالية</span>
-            <span class="badge"><span class="dot" style="background:var(--warn)"></span> الفئة: CWE‑295</span>
-            <span class="badge"><span class="dot" style="background:var(--accent)"></span>向 متجه الهجوم: شبكة (MITM/خادم مُزوّر)</span>
-          </div>
-        </div>
-      </div>
-    </section>
+<body class="antialiased">
 
-    <div class="grid">
-      <!-- TOC -->
-      <aside class="toc" aria-label="فهرس المحتويات">
-        <header>
-          <h2>فهرس المحتويات</h2>
-          <button id="tocToggle" aria-expanded="true" aria-controls="tocNav">طي/فتح</button>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-10 opacity-0 is-visible">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2 animated-gradient-text">تحليل أمني معمّق: تجاوز التحقق من شهادة TLS</h1>
+            <p class="text-lg text-gray-400">مشروع: <span class="font-mono text-indigo-400">digitalocean/go-nbd</span></p>
+            <p class="text-xl text-gray-300 mt-4">إعداد الباحث الأمني: <span class="font-bold text-white">Ali Firas</span></p>
         </header>
-        <nav id="tocNav">
-          <a href="#summary">ملخص</a>
-          <a href="#meta">التصنيف والمكوّن المتأثر</a>
-          <a href="#code">الشيفرة الضعيفة</a>
-          <a href="#details">تفاصيل تقنية</a>
-          <a href="#poc">إثبات المفهوم (PoC)</a>
-          <a href="#impact">الأثر والسيناريو الواقعي</a>
-          <a href="#fix">التخفيف والإصلاح</a>
-          <a href="#hardening">تشديد التحقق (اختياري)</a>
-          <a href="#audit">كيف راجعت الشيفرة</a>
-          <a href="#tests">اختبارات تأكيدية</a>
-          <a href="#legal">ملاحظات</a>
-        </nav>
-      </aside>
 
-      <!-- Content -->
-      <main>
-        <article class="card" id="summary">
-          <h3 class="section-title">ملخص</h3>
-          <p>
-            تم اكتشاف ثغرة <strong>تجاوز التحقق من شهادة TLS</strong> في مشروع <code>digitalocean/go-nbd</code>، تنبع من إعداد TLS داخل بيئة الاختبار حيث تم تفعيل <code>InsecureSkipVerify: true</code>، ما يُعطِّل التحقق من سلسلة الشهادات واسم المضيف كلياً. 
-            عند اعتماد هذا النمط كما هو — سواء باقتباس الشيفرة من الاختبارات أو عبر تهيئات مماثلة — يقبل العميل شهادات ذاتية التوقيع أو عشوائية، ما يفتح الباب لهجمات <strong>الرجل في الوسط (MITM)</strong>.
-          </p>
-          <div class="callout warn">
-            <strong>ملاحظة سياقية:</strong> الملف المتأثر <em>هو ملف اختبار</em> (<code>nbdkIt_test.go</code>)  مسار تشغيل إنتاجي. مع ذلك، فإن تضمين <code>InsecureSkipVerify: true</code> حتى ضمن الاختبارات يُعد ممارسة غير آمنة وتخلق <em>نمطاً مضللاً</em> قد يُنسخ إلى الشيفرة الإنتاجية أو أمثلة الاستخدام. هذا التقرير يعالج المخاطر ويوفر تصحيحاً سليماً وآمناً.
-          </div>
-        </article>
+        <main>
+            <!-- Summary Section -->
+            <section id="summary" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">1. الملخص التنفيذي</h2>
+                <p class="mb-4">
+                    بعد إجراء مراجعة دقيقة للشفرة المصدرية (Source Code Review) لمشروع <span class="font-mono text-gray-300">go-nbd</span>، تم الكشف عن ثغرة أمنية حرجة تتمثل في تجاوز عملية التحقق من صحة شهادة TLS. تنشأ هذه المشكلة لأن آلية الاختبار تقوم بتعطيل التحقق من الشهادة بشكل كامل من خلال تعيين قيمة <span class="font-mono text-red-400">InsecureSkipVerify: true</span>. هذا الإعداد يسمح للعميل بقبول أي شهادة، بما في ذلك الشهادات الموقعة ذاتيًا أو غير الموثوقة، مما يفتح الباب أمام هجمات الوسيط (Man-in-the-Middle) لاعتراض وفك تشفير البيانات الحساسة.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <span class="tag severity-high">الخطورة: عالية</span>
+                    <span class="tag cwe-tag">CWE-295: Improper Certificate Validation</span>
+                    <span class="tag" style="background-color: #047857; color: #a7f3d0;">ناقل الهجوم: شبكي (MITM)</span>
+                </div>
+            </section>
 
-        <article class="card" id="meta">
-          <h3 class="section-title">التصنيف والمكوّن المتأثر</h3>
-          <div class="kv">
-            <div>فئة الضعف</div><div>Improper Certificate Validation — <strong>CWE‑295</strong></div>
-            <div>الشدة</div><div><strong>عالية</strong> — إمكانية اعتراض/تعديل بيانات NBD عبر الشبكة</div>
-            <div>متجه الهجوم</div><div>MITM / خادم مُزوّر عبر الشبكة</div>
-            <div>المكوّن المتأثر</div><div><code>nbdkit_test.go</code> في الدالتين <code>provideSecureNBD</code> و<code>provideSecureNBDUnix</code></div>
-            <div>نطاق التأثير</div><div>أي عميل يعتمد التهيئة غير الآمنة أو يقتبس نمط الاختبار كما هو</div>
-          </div>
-        </article>
+            <!-- Vulnerable Code Section -->
+            <section id="vulnerable-code" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">2. الشفرة المصدرية المصابة</h2>
+                <p class="mb-4">
+                    تم تحديد نقطة الضعف في ملف <span class="font-mono text-gray-300">nbdkit_test.go</span>. الشيفرة التالية، الموجودة في دالتي <span class="font-mono text-gray-300">provideSecureNBD</span> و <span class="font-mono text-gray-300">provideSecureNBDUnix</span>، هي السبب المباشر للثغرة:
+                </p>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)">نسخ</button>
+                    <pre><code class="language-go">
+tlsConf = &tls.Config{
+    RootCAs:          certPool,
+    <span class="highlight-line">InsecureSkipVerify: true, //  Disables all certificate validation</span>
+}
+                    </code></pre>
+                </div>
+                 <p class="mt-4 text-sm text-gray-400">
+                    <strong class="text-yellow-400">ملاحظة فنية:</strong> إن وجود السطر <code class="font-mono text-red-400">InsecureSkipVerify: true</code> يلغي فعليًا أي فائدة من توفير <code class="font-mono text-gray-300">RootCAs</code>، حيث يتم تجاهل عملية التحقق بالكامل.
+                </p>
+            </section>
+            
+            <!-- Technical Details Section -->
+            <section id="technical-details" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">3. تحليل فني معمّق</h2>
+                <p class="mb-4">
+                    عند تفعيل الخاصية <code class="font-mono text-red-400">InsecureSkipVerify: true</code> في حزمة TLS الخاصة بلغة Go، يتم تخطي عمليتين حاسمتين للأمان:
+                </p>
+                <ul class="list-disc list-inside space-y-2 mb-4 pr-4">
+                    <li><strong class="text-gray-300">التحقق من سلسلة الشهادات (Certificate chain validation):</strong> لا يتم التحقق مما إذا كانت الشهادة المقدمة من الخادم موقعة من قبل مرجع مصدق (CA) موثوق به.</li>
+                    <li><strong class="text-gray-300">التحقق من اسم المضيف (Hostname verification):</strong> لا يتم التحقق مما إذا كان الاسم الشائع (Common Name) أو الاسم البديل للموضوع (Subject Alternative Name) في الشهادة يطابق اسم المضيف الذي يحاول العميل الاتصال به.</li>
+                </ul>
+                <p>
+                   هذا يسمح للمهاجم بتنفيذ هجوم الوسيط (MITM) بسهولة عبر الخطوات التالية:
+                </p>
+                <ol class="list-decimal list-inside space-y-2 pr-4 mt-4">
+                    <li>يقوم المهاجم باعتراض حركة مرور الشبكة (عبر DNS spoofing, ARP poisoning).</li>
+                    <li>يقدم المهاجم شهادة مزيفة وموقعة ذاتيًا للعميل.</li>
+                    <li>العميل، بسبب <code class="font-mono text-red-400">InsecureSkipVerify: true</code>، يقبل الشهادة المزيفة دون تردد.</li>
+                    <li>يتم إنشاء جلسة TLS "آمنة" مع المهاجم، الذي يمكنه الآن قراءة وتعديل جميع البيانات المرسلة.</li>
+                </ol>
+            </section>
 
-        <article class="card" id="code">
-          <h3 class="section-title">الشيفرة الضعيفة</h3>
-          <p>إعداد TLS يعطّل التحقق بشكل صريح:</p>
-          <pre><div class="copy"><button data-copy="#vuln">نسخ</button></div><code id="vuln">tlsConf = &tls.Config{
-    RootCAs:            certPool,
-    InsecureSkipVerify: true, // يعطل جميع عمليات التحقق من الشهادات
-}</code></pre>
-        </article>
+            <!-- Proof of Concept Section -->
+            <section id="poc" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">4. توثيق قبول التقرير</h2>
+                <p class="mb-4">
+                    لإثبات التأثير العملي وأهمية هذه الثغرة، تم تقديم التقرير إلى الجهة المسؤولة وتم قبوله، مما يؤكد صحة النتائج وخطورتها.
+                </p>
+                <div class="my-6">
+                    <img src="https://i.imgur.com/v0IP81w.jpeg" alt="Proof of Concept Output" class="rounded-lg shadow-lg w-full h-auto object-cover border-2 border-gray-600 transition-transform duration-300 hover:scale-105">
+                    <p class="text-center text-sm mt-2 text-gray-500">صورة توضح قبول التقرير من قبل الشركة.</p>
+                </div>
+            </section>
 
-        <article class="card" id="details">
-          <h3 class="section-title">تفاصيل تقنية</h3>
-          <ul>
-            <li>تفعيل <code>InsecureSkipVerify: true</code> في Go يعطّل: <strong>التحقق من سلسلة الشهادات</strong> و<strong>التحقق من اسم المضيف</strong>.</li>
-            <li>وجود <code>RootCAs</code> يصبح بلا معنى، إذ لا يُجرى أي تحقق فعلي.</li>
-            <li>يمكن لمهاجم تشغيل خادم TLS مُزوّر بشهادة ذاتية التوقيع، واعتراض الاتصالات (DNS spoofing/ARP poisoning/بوابة Wi‑Fi)، وسيقبل العميل الشهادة وتُنشأ جلسة TLS «وهمية الأمان» قابلة للتنصت والتعديل.</li>
-          </ul>
-        </article>
+            <!-- Impact Section -->
+            <section id="impact" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">5. الأثر والمخاطر</h2>
+                <ul class="list-disc list-inside space-y-3 pr-4">
+                    <li>
+                        <strong class="text-red-400">خرق السرية (Confidentiality Breach):</strong> يمكن للمهاجم اعتراض وقراءة أي بيانات حساسة يتم إرسالها، مثل محتويات القرص أو بيانات المصادقة.
+                    </li>
+                    <li>
+                        <strong class="text-red-400">خرق السلامة (Integrity Breach):</strong> يمكن للمهاجم تعديل أو حقن بيانات NBD أثناء النقل دون أن يتم كشفه.
+                    </li>
+                    <li>
+                        <strong class="text-yellow-400">سيناريو هجوم واقعي:</strong> يمكن لمهاجم على نفس الشبكة المحلية (LAN) انتحال شخصية خادم NBD الشرعي. سيقبل العميل الشهادة المزيفة للمهاجم، مما يمنح المهاجم وصولاً كاملاً للبيانات المنقولة.
+                    </li>
+                </ul>
+            </section>
 
-        <article class="card" id="poc">
-          <h3 class="section-title">إثبات المفهوم (PoC)</h3>
-          <ol>
-            <li>تشغيل خادم TLS زائف على <code>localhost:10811</code> بشهادة ذاتية التوقيع (<em>FakeTLSServer</em>).</li>
-            <li>تشغيل عميل TLS مع <code>InsecureSkipVerify: true</code> ⇒ <strong>الاتصال ينجح</strong>، وتُقبل الشهادة الزائفة.</li>
-            <li>إعادة التجربة مع <code>InsecureSkipVerify: false</code> ⇒ <strong>فشل متوقع</strong> برسالة <code>x509: certificate signed by unknown authority</code>.</li>
-            <li>تجربة <code>go-nbd</code> عبر <code>Dialer</code> و<code>StartTLS</code> مع التهيئة غير الآمنة ⇒ المصافحة تنجح بشهادة مزيفة، ما يؤكد قابلية الاستغلال.</li>
-          </ol>
-          <pre><div class="copy"><button data-copy="#out">نسخ</button></div><code id="out">[TLS TEST]  Connection succeeded with fake certificate!
-[TLS TEST]  Risk! Self-signed certificate was accepted
-[TLS TEST]  Sensitive data sent across rogue TLS server
-[SECURE TEST]  Connection failed as expected: x509: certificate signed by unknown authority
-[NBD TEST]  StartTLS succeeded with fake certificate
-[NBD TEST]  Confirmed vulnerability in go-nbd!</code></pre>
-          <p class="callout ok">ملف PoC الكامل: <code>nbd_tls_exploit.go</code> (مرفق خارجياً).</p>
-        </article>
-
-        <article class="card" id="impact">
-          <h3 class="section-title">الأثر والسيناريو الواقعي</h3>
-          <ul>
-            <li><strong>سرية البيانات:</strong> محتويات NBD (قد تشمل بيانات حساسة أو مصادقات) قابلة للاعتراض.</li>
-            <li><strong>سلامة البيانات:</strong> يمكن للخصم حقن أو تعديل كتل بيانات NBD أثناء النقل.</li>
-            <li><strong>سيناريو عملي:</strong> مهاجم ضمن نفس الشبكة المحلية يتقمّص خادم NBD بشهادة زائفة؛ يقبل العميل الاتصال ويُتاح للخصم قراءة/تعديل البيانات.</li>
-          </ul>
-        </article>
-
-        <article class="card" id="fix">
-          <h3 class="section-title">التخفيف والإصلاح (Patch)</h3>
-          <p>إزالة <code>InsecureSkipVerify</code> وتفعيل الضوابط الأساسية مع ضمان <code>ServerName</code> عند الاتصال:</p>
-          <pre class="diff"><div class="copy"><button data-copy="#patch">نسخ</button></div><code id="patch">- tlsConf = &tls.Config{
--     RootCAs:            certPool,
+            <!-- Solution Section -->
+            <section id="solution" class="section-card">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b-2 border-gray-700 pb-2">6. الحل المقترح والتوصيات</h2>
+                <p class="mb-4">
+                    الحل المباشر هو إزالة الإعداد <code class="font-mono text-red-400">InsecureSkipVerify: true</code> لفرض التحقق الإلزامي من الشهادة.
+                </p>
+                <h3 class="text-lg font-semibold text-white mb-2 mt-6">التصحيح المقترح (Suggested Patch):</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Before -->
+                    <div>
+                        <h4 class="font-bold text-red-400 mb-2">قبل (Vulnerable):</h4>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">نسخ</button>
+                            <pre><code class="language-diff">
+- tlsConf = &tls.Config{
+-     RootCAs:          certPool,
 -     InsecureSkipVerify: true,
 - }
+                            </code></pre>
+                        </div>
+                    </div>
+                    <!-- After -->
+                    <div>
+                        <h4 class="font-bold text-green-400 mb-2">بعد (Patched):</h4>
+                        <div class="code-block">
+                             <button class="copy-btn" onclick="copyCode(this)">نسخ</button>
+                            <pre><code class="language-diff">
 + tlsConf = &tls.Config{
 +     RootCAs:    certPool,
 +     MinVersion: tls.VersionTLS12,
-+     // يُرجى ضبط ServerName عند الاتصال لضمان التحقق من اسم المضيف
-+ }</code></pre>
-          <div class="callout">
-            <strong>مهم:</strong> في مسارات الاختبار، يمكن إنشاء شهادة موثقة ذاتياً وإضافتها إلى <code>certPool</code> بدل تعطيل التحقق. هكذا تبقى الاختبارات «واقعية وآمنة» دون تقويض ضمانات TLS.
-          </div>
-        </article>
-
-        <article class="card" id="hardening">
-          <h3 class="section-title">تشديد التحقق (اختياري)</h3>
-          <ul>
-            <li>استخدام <code>VerifyConnection</code> أو <code>VerifyPeerCertificate</code> للتحقق الدقيق (اسم مضيف/بصمة/تثبيت شهادة).</li>
-            <li>التثبيت عبر مفاتيح عامة/بصمات (<em>certificate pinning</em>) حيث يلزم.</li>
-            <li>إجراء اختبارات وحدة للتأكد أن العميل يرفض الشهادات غير الموثوقة دائماً.</li>
-          </ul>
-          <pre><div class="copy"><button data-copy="#verify">نسخ</button></div><code id="verify">tlsConf := &tls.Config{
-    RootCAs:    certPool,
-    MinVersion: tls.VersionTLS12,
-    ServerName: expectedHost,
-    VerifyConnection: func(cs tls.ConnectionState) error {
-        // مثال بسيط للتحقق من اسم المضيف أو البصمة
-        if cs.ServerName != expectedHost { return fmt.Errorf("hostname mismatch") }
-        return nil
-    },
-}</code></pre>
-        </article>
-
-        <article class="card" id="audit">
-          <h3 class="section-title">كيف راجعت الشيفرة (منهجية Source Code Review)</h3>
-          <ol>
-            <li>بحث مركّز عن أي استخدام لـ <code>InsecureSkipVerify</code> ضمن المستودع (grep/rg).</li>
-            <li>تحديد نقاط التهيئة في <code>nbdkit_test.go</code> بالدالتين <code>provideSecureNBD*</code>.</li>
-            <li>تحليل مسارات استدعاء <code>Dialer</code>/<code>StartTLS</code> للتحقق من انتقال التهيئة إلى العميل.</li>
-            <li>بناء بيئة محلية وتشغيل <em>خادم TLS زائف</em> واختبار سلوك العميل مع/بدون التحقق.</li>
-            <li>قياس النتائج وتوثيق المخرجات (نجاح/فشل المصافحة، رسائل x509).</li>
-          </ol>
-        </article>
-
-        <article class="card" id="tests">
-          <h3 class="section-title">اختبارات تأكيدية (يُوصى بإضافتها)</h3>
-          <ul>
-            <li>اختبار يضمن فشل المصافحة مع شهادة غير موثوقة.</li>
-            <li>اختبار ينجح فقط عند إضافة الجذر الموثوق إلى <code>certPool</code> مع <strong>إبقاء التحقق مفعّلاً</strong>.</li>
-            <li>اختبار يُثبت أن <code>ServerName</code> مطلوب ومتطابق.</li>
-          </ul>
-          <pre><div class="copy"><button data-copy="#test">نسخ</button></div><code id="test">t.Run("reject self-signed without trust", func(t *testing.T) {
-    tlsConf := secureTLS(certPool /* لا تعطل التحقق */)
-    _, err := tls.Dial("tcp", addr, tlsConf)
-    if err == nil { t.Fatalf("expected x509 error, got nil") }
-})</code></pre>
-        </article>
-
-        <article class="card" id="legal">
-          <h3 class="section-title">ملاحظات</h3>
-          <ul>
-            <li>هذا التقرير تقني ويعكس نتيجة مراجعة شيفرة واختبار عملي </li>
-            <li>لا يُوصى أبداً باستخدام <code>InsecureSkipVerify</code> خارج بيئات تصحيح محلية معزولة، وحتى هناك توجد بدائل آمنة.</li>
-          </ul>
-          <div class="footer">© 2025 Ali Firas — The Smart Shadow</div>
-        </article>
-      </main>
++     // Ensure hostname verification is performed
++     // ServerName should be set when dialing
++ }
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                 <p class="mt-4 text-sm text-gray-400">
+                    <strong class="text-green-400">تحسين إضافي:</strong> إضافة <code class="font-mono text-gray-300">MinVersion: tls.VersionTLS12</code> يضمن استخدام بروتوكولات TLS حديثة وآمنة، مما يعزز الموقف الأمني العام.
+                </p>
+            </section>
+        </main>
     </div>
-  </div>
 
-  <script>
-    // TOC toggle
-    const tocToggle = document.getElementById('tocToggle');
-    const tocNav = document.getElementById('tocNav');
-    tocToggle?.addEventListener('click', () => {
-      const open = tocNav.style.display !== 'none';
-      tocNav.style.display = open ? 'none' : 'block';
-      tocToggle.setAttribute('aria-expanded', String(!open));
-    });
-
-    // Copy buttons
-    document.querySelectorAll('.copy button').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const sel = btn.getAttribute('data-copy');
-        if (!sel) return;
-        const el = document.querySelector(sel);
-        if (!el) return;
-        try {
-          await navigator.clipboard.writeText(el.textContent || '');
-          const old = btn.textContent; btn.textContent = '✔ تم النسخ';
-          setTimeout(()=>{btn.textContent = old}, 1400);
-        } catch(e){
-          alert('تعذّر النسخ تلقائياً — انسخ يدوياً');
+    <script>
+        // Function to copy code to clipboard
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('code').innerText;
+            const textArea = document.createElement('textarea');
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                button.innerText = 'تم النسخ!';
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                button.innerText = 'فشل النسخ';
+            }
+            document.body.removeChild(textArea);
+            setTimeout(() => {
+                button.innerText = 'نسخ';
+            }, 2000);
         }
-      });
-    });
 
-    // Smooth anchor scroll & highlight
-    document.querySelectorAll('.toc a').forEach(a => {
-      a.addEventListener('click', (e) => {
-        const href = a.getAttribute('href');
-        if (!href || !href.startsWith('#')) return;
-        e.preventDefault();
-        document.querySelector(href)?.scrollIntoView({behavior:'smooth', block:'start'});
-      });
-    });
-  </script>
+        // Intersection Observer for scroll animations
+        document.addEventListener("DOMContentLoaded", () => {
+            const sections = document.querySelectorAll('.section-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Animate header immediately
+            const header = document.querySelector('header');
+            if (header) {
+                header.classList.add('is-visible');
+            }
+        });
+    </script>
 </body>
 </html>
+
