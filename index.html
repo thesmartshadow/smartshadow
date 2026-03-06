@@ -1,330 +1,1372 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ali Firas | Cybersecurity</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ali Firas | Cybersecurity Researcher</title>
+  <meta name="description" content="Ali Firas — animated cybersecurity About Me page with achievements, CVEs, source links, and contact channels." />
+  <style>
+    :root {
+      --bg: #040510;
+      --bg-2: #070c1f;
+      --panel: rgba(9, 14, 32, 0.62);
+      --panel-strong: rgba(7, 11, 26, 0.84);
+      --text: #eef4ff;
+      --muted: #9faccc;
+      --line: rgba(255,255,255,0.09);
+      --cyan: #59f3ff;
+      --purple: #8b5cf6;
+      --pink: #ff5bbd;
+      --lime: #8aff80;
+      --glow: 0 0 25px rgba(89,243,255,.18), 0 0 80px rgba(139,92,246,.18);
+      --radius: 26px;
+      --radius-sm: 18px;
+      --container: min(1240px, calc(100% - 28px));
+      --shadow: 0 20px 80px rgba(0,0,0,.42);
+      --spot-x: 50%;
+      --spot-y: 22%;
+      --scroll: 0;
+    }
 
-  :root {
-    --bg-dark: #0A0F1A; /* Very dark blue */
-    --text-light: #E0E0E0;
-    --text-secondary: #a0aec0; /* Lighter gray for secondary text */
-    --accent-color: #00F5D4; /* Teal/Cyan */
-    --accent-darker: #00A896; /* Darker teal for hovers */
-    --container-bg: rgba(20, 29, 48, 0.85); /* Dark blueish, translucent */
-    --border-color: rgba(0, 245, 212, 0.25);
-  }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(89,243,255,.13), transparent 22%),
+        radial-gradient(circle at 88% 14%, rgba(139,92,246,.14), transparent 24%),
+        radial-gradient(circle at 50% 78%, rgba(255,91,189,.10), transparent 28%),
+        linear-gradient(180deg, #03040c 0%, #060915 36%, #040510 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -18vmax;
+      pointer-events: none;
+      z-index: -4;
+      filter: blur(80px);
+      opacity: .55;
+      animation: drift 22s ease-in-out infinite alternate;
+    }
 
-  body {
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    line-height: 1.7;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    overflow-x: hidden; /* Prevent horizontal scroll from animations */
-    position: relative; /* For pseudo-elements */
-  }
+    body::before {
+      background:
+        radial-gradient(circle, rgba(89,243,255,.22), transparent 34%),
+        radial-gradient(circle at 72% 48%, rgba(139,92,246,.20), transparent 32%);
+      transform: translate3d(-8%, -10%, 0);
+    }
 
-  /* Animated Background Layers */
-  body::before, body::after {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: -1;
-  }
+    body::after {
+      animation-duration: 28s;
+      background:
+        radial-gradient(circle, rgba(255,91,189,.16), transparent 28%),
+        radial-gradient(circle at 30% 70%, rgba(89,243,255,.10), transparent 26%);
+      transform: translate3d(10%, 8%, 0);
+    }
 
-  /* Layer 1: Diagonal Network Lines */
-  body::before {
-    background:
-      linear-gradient(135deg, hsla(170, 100%, 50%, 0.03) 1px, transparent 1px),
-      linear-gradient(45deg, hsla(170, 100%, 50%, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px; /* Smaller, denser grid */
-    animation: moveLines 40s linear infinite;
-  }
+    .backdrop, .grid, .spotlight, .scanlines, .noise, .vignette, #particleCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
 
-  /* Layer 2: Fading & Moving Particles */
-  body::after {
-    background-image:
-      radial-gradient(hsla(170, 100%, 60%, 0.08) 1px, transparent 1.5px), /* Brighter, smaller dots */
-      radial-gradient(hsla(170, 100%, 60%, 0.05) 2px, transparent 2.5px); /* Fainter, larger dots */
-    background-size: 30px 30px, 90px 90px;
-    animation: moveDots 25s linear infinite, pulseDots 4s ease-in-out infinite alternate;
-  }
+    #particleCanvas { z-index: -3; }
+    .backdrop {
+      z-index: -2;
+      background:
+        linear-gradient(transparent 0 96%, rgba(255,255,255,.035) 96% 100%),
+        linear-gradient(90deg, transparent 0 96%, rgba(255,255,255,.03) 96% 100%);
+      background-size: 100% 64px, 64px 100%;
+      opacity: .06;
+    }
+    .grid {
+      z-index: -2;
+      background-image:
+        linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity: .08;
+      mask-image: radial-gradient(circle at 50% 42%, black 24%, transparent 76%);
+      transform: perspective(1200px) rotateX(78deg) translateY(24vh) scale(1.42);
+      animation: gridShift 24s linear infinite;
+      z-index: -1;
+    }
+    .spotlight {
+      z-index: -1;
+      background:
+        radial-gradient(circle 420px at var(--spot-x) var(--spot-y), rgba(255,255,255,.07), transparent 55%),
+        radial-gradient(circle 220px at calc(var(--spot-x) + 6%) calc(var(--spot-y) + 10%), rgba(89,243,255,.10), transparent 60%),
+        radial-gradient(circle 180px at calc(var(--spot-x) - 10%) calc(var(--spot-y) - 6%), rgba(139,92,246,.08), transparent 58%);
+      mix-blend-mode: screen;
+    }
+    .noise {
+      z-index: -1;
+      opacity: .055;
+      background-image:
+        radial-gradient(circle at 20% 25%, rgba(255,255,255,.6) 0 1px, transparent 1.7px),
+        radial-gradient(circle at 75% 45%, rgba(255,255,255,.45) 0 1px, transparent 1.7px),
+        radial-gradient(circle at 60% 75%, rgba(255,255,255,.55) 0 1px, transparent 1.7px);
+      background-size: 130px 130px, 170px 170px, 220px 220px;
+      animation: grain 18s steps(8) infinite;
+    }
+    .scanlines {
+      z-index: 50;
+      opacity: .04;
+      background: repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 1px, transparent 2px 6px);
+      mix-blend-mode: soft-light;
+    }
+    .vignette {
+      z-index: -1;
+      background: radial-gradient(circle at center, transparent 45%, rgba(0,0,0,.38) 100%);
+    }
 
-  @keyframes moveLines {
-    0% { background-position: 0 0, 0 0; }
-    100% { background-position: 100px 50px, -50px 100px; }
-  }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
 
-  @keyframes moveDots {
-    0% { background-position: 0 0, 0 0; }
-    100% { background-position: 120px -120px, -180px 180px; }
-  }
+    .cursor-orb {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      pointer-events: none;
+      z-index: 60;
+      translate: -50% -50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(89,243,255,.36) 42%, rgba(139,92,246,.12) 72%, transparent 74%);
+      box-shadow: 0 0 30px rgba(89,243,255,.35), 0 0 60px rgba(139,92,246,.18);
+      mix-blend-mode: screen;
+      opacity: .9;
+      transition: width .2s ease, height .2s ease, opacity .2s ease;
+    }
+    .cursor-orb.active { width: 42px; height: 42px; opacity: 1; }
 
-  @keyframes pulseDots {
-    0% { opacity: 0.2; transform: scale(0.95); }
-    100% { opacity: 0.6; transform: scale(1.05); }
-  }
+    .progress {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 3px;
+      width: calc(var(--scroll) * 100%);
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--pink));
+      box-shadow: 0 0 18px rgba(89,243,255,.45);
+      z-index: 80;
+      transform-origin: left center;
+    }
 
-  .profile-container {
-    max-width: 700px;
-    width: 100%;
-    margin: 20px;
-    padding: 30px 35px;Ali Firas
-    background-color: var(--container-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 245, 212, 0.1), 0 0 15px rgba(0,0,0,0.3);
-    text-align: center;
-    z-index: 1;
-    opacity: 0;
-    transform: translateY(30px);
-    animation: fadeInProfile 0.8s 0.3s ease-out forwards;
-    backdrop-filter: blur(10px) saturate(120%);
-    -webkit-backdrop-filter: blur(10px) saturate(120%);
-  }
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: linear-gradient(180deg, rgba(4,7,18,.86), rgba(4,7,18,.42));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
 
-  @keyframes fadeInProfile {
-    to {
+    nav {
+      width: var(--container);
+      min-height: 76px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: .05em;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, rgba(89,243,255,.12), rgba(139,92,246,.18));
+      box-shadow: var(--glow);
+    }
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: -25%;
+      background: conic-gradient(from 0deg, transparent, rgba(255,255,255,.65), transparent 28%);
+      animation: spin 6s linear infinite;
+    }
+    .brand-mark span { position: relative; z-index: 1; }
+    .nav-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-link {
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+      border: 1px solid transparent;
+      transition: transform .35s ease, border-color .35s ease, color .35s ease, background .35s ease;
+      font-size: .95rem;
+    }
+    .nav-link:hover {
+      transform: translateY(-2px);
+      color: var(--text);
+      border-color: rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+
+    .container { width: var(--container); margin: 0 auto; }
+    section { position: relative; }
+
+    .glass {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(120deg, rgba(255,255,255,.12), transparent 26%, transparent 72%, rgba(255,255,255,.05));
+      pointer-events: none;
+    }
+    .glass::after {
+      content: "";
+      position: absolute;
+      inset: auto -12% -55% -12%;
+      height: 140px;
+      background: radial-gradient(circle, rgba(89,243,255,.12), transparent 62%);
+      filter: blur(36px);
+      pointer-events: none;
+    }
+
+    .hero {
+      min-height: calc(100vh - 76px);
+      display: grid;
+      align-items: center;
+      padding: 46px 0 40px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.18fr .82fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    .hero-card { padding: 34px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #c6d5ff;
+      font-size: .88rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .eyebrow .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--lime);
+      box-shadow: 0 0 15px rgba(138,255,128,.8);
+      animation: pulse 1.8s ease infinite;
+    }
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(2.7rem, 7vw, 5.65rem);
+      line-height: .94;
+      letter-spacing: -.055em;
+    }
+    .gradient-text {
+      background: linear-gradient(90deg, #ffffff 0%, #9ffcff 26%, #c6afff 58%, #ff9cd8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 28px rgba(89,243,255,.12));
+    }
+    .type-line {
+      min-height: 40px;
+      font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+      color: #d1dcff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .caret {
+      width: 10px;
+      height: 1.2em;
+      background: linear-gradient(180deg, var(--cyan), transparent);
+      animation: blink 1s steps(1) infinite;
+      box-shadow: 0 0 12px rgba(89,243,255,.45);
+    }
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.78;
+    }
+    .hero-copy strong { color: #eaf8ff; }
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+    .btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: .01em;
+      transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease, background .35s ease;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,.18), transparent);
+      transform: translateX(-120%);
+      transition: transform .7s ease;
+    }
+    .btn:hover::before { transform: translateX(120%); }
+    .btn:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 18px 40px rgba(0,0,0,.28), 0 0 32px rgba(89,243,255,.10);
+      background: rgba(255,255,255,.08);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(89,243,255,.17), rgba(139,92,246,.18));
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 0 22px rgba(89,243,255,.15);
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .stat {
+      padding: 16px 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .stat .num {
+      font-size: clamp(1.55rem, 2vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: #f4fbff;
+    }
+    .stat .label {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 18px;
+      perspective: 1400px;
+    }
+    .radar-card, .terminal-card {
+      padding: 24px;
+      min-height: 280px;
+    }
+    .terminal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      color: #d9e6ff;
+      font-size: .9rem;
+    }
+    .traffic {
+      display: flex;
+      gap: 8px;
+    }
+    .traffic span {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+    }
+    .traffic span:nth-child(1){ background:#ff5f57; }
+    .traffic span:nth-child(2){ background:#febc2e; }
+    .traffic span:nth-child(3){ background:#28c840; }
+    .terminal-line {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: .96rem;
+      color: #dff7ff;
+    }
+    .terminal-line .prompt { color: var(--cyan); }
+    .terminal-line .dim { color: #97aac8; }
+
+    .radar {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      width: min(100%, 320px);
+      margin: 6px auto 0;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(circle, rgba(89,243,255,.10), transparent 42%),
+        repeating-radial-gradient(circle, rgba(255,255,255,.07) 0 1px, transparent 1px 34px),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      overflow: hidden;
+      box-shadow: inset 0 0 40px rgba(89,243,255,.08), 0 0 40px rgba(139,92,246,.10);
+    }
+    .radar::before,
+    .radar::after {
+      content: "";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: 1px;
+      height: 48%;
+      background: linear-gradient(180deg, rgba(255,255,255,.18), transparent);
+      transform-origin: top center;
+    }
+    .radar::after {
+      width: 48%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,.18), transparent);
+    }
+    .sweep {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg 300deg, rgba(89,243,255,.20) 334deg, rgba(89,243,255,.02) 360deg);
+      animation: spin 5.8s linear infinite;
+      mix-blend-mode: screen;
+    }
+    .blip {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 18px rgba(138,255,128,.7);
+      animation: blip 2.4s ease-in-out infinite;
+    }
+    .blip.b1 { top: 25%; left: 58%; animation-delay: .2s; }
+    .blip.b2 { top: 48%; left: 28%; animation-delay: .9s; }
+    .blip.b3 { top: 70%; left: 62%; animation-delay: 1.4s; }
+    .blip.b4 { top: 37%; left: 72%; animation-delay: 1.8s; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      letter-spacing: -.04em;
+    }
+    .section-head p {
+      margin: 0;
+      max-width: 700px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .content { padding: 28px 0 70px; }
+    .about-grid, .skills-grid, .links-grid, .timeline-grid {
+      display: grid;
+      gap: 18px;
+    }
+    .about-grid { grid-template-columns: 1.1fr .9fr; margin-top: 24px; }
+    .skills-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .links-grid { grid-template-columns: 1fr 1fr; }
+    .timeline-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+    .card { padding: 24px; }
+    .lead {
+      color: #d9e6ff;
+      line-height: 1.82;
+      font-size: 1rem;
+    }
+    .muted { color: var(--muted); }
+
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #d9eaff;
+      font-size: .92rem;
+    }
+    .chip::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      box-shadow: 0 0 10px rgba(89,243,255,.6);
+    }
+
+    .skill-card {
+      min-height: 250px;
+      position: relative;
+      overflow: hidden;
+    }
+    .skill-card h3,
+    .mini-card h3,
+    .timeline-card h3,
+    .contact-card h3,
+    .cve-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.18rem;
+      letter-spacing: -.02em;
+    }
+    .skill-card p,
+    .mini-card p,
+    .timeline-card p,
+    .contact-card p,
+    .cve-card p {
+      margin: 0;
+      line-height: 1.76;
+      color: var(--muted);
+    }
+    .skill-number {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -.08em;
+      opacity: .18;
+      position: absolute;
+      right: 20px;
+      bottom: 10px;
+      color: #ffffff;
+      user-select: none;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .mini-card { min-height: 170px; }
+
+    .timeline-card {
+      min-height: 220px;
+      position: relative;
+      padding-top: 28px;
+      overflow: hidden;
+    }
+    .timeline-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      width: fit-content;
+      background: linear-gradient(135deg, rgba(89,243,255,.14), rgba(155,124,255,.12));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.03) inset;
+      color: #ecf9ff;
+    }
+    .timeline-step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.1);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      color: #ffffff;
+    }
+    .timeline-step-label {
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #dff8ff;
+      white-space: nowrap;
+    }
+
+    .contact-list, .source-links, .ref-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .contact-link, .source-link, .ref-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.035);
+      transition: transform .3s ease, background .3s ease, border-color .3s ease;
+      font-size: .92rem;
+      color: #dfeaff;
+      word-break: break-word;
+    }
+    .contact-link:hover, .source-link:hover, .ref-item:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,.065);
+      border-color: rgba(255,255,255,.15);
+    }
+
+    .cve-section { padding-bottom: 92px; }
+    .cve-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+    .cve-card {
+      padding: 24px;
+      min-height: 310px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cve-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -25% -30% auto;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(89,243,255,.18), transparent 60%);
+      filter: blur(20px);
+    }
+    .cve-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .tag {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #d6e7ff;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .ref-list { margin-top: 16px; }
+    .ref-item {
+      background: rgba(255,255,255,.026);
+      color: #c7d6f7;
+      border-radius: 999px;
+      padding-inline: 12px;
+      font-size: .84rem;
+    }
+
+    .footer {
+      padding: 0 0 64px;
+    }
+    .footer-card {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 24px;
+      align-items: center;
+    }
+    .footer-title {
+      margin: 0 0 10px;
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+      letter-spacing: -.04em;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #dff7ff;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px) scale(.985);
+      transition: opacity .85s ease, transform .85s cubic-bezier(.2,.7,.2,1);
+      will-change: transform, opacity;
+    }
+    .reveal.in {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
-  }
 
-  .profile-header .logo {
-    width: 70px;
-    height: 70px;
-    background-color: var(--accent-color);
-    color: var(--bg-dark);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.8rem; /* Adjusted size */
-    font-weight: 700;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    box-shadow: 0 0 18px var(--accent-color);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .profile-header .logo:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 25px var(--accent-color);
-  }
-
-  .profile-header h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.5rem; /* alifiras */
-    font-weight: 700;
-    color: var(--text-light);
-    margin-bottom: 5px;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px hsla(170, 100%, 50%, 0.5);
-  }
-
-  .profile-header h2 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.3rem; /* Cybersecurity */
-    font-weight: 400;
-    color: var(--accent-color);
-    margin-bottom: 25px;
-    letter-spacing: 0.5px;
-  }
-
-  .profile-bio p {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    margin-bottom: 30px;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .profile-contact h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-light);
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .profile-contact ul {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 30px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-  }
-
-  .profile-contact ul li a {
-    display: inline-flex; /* Changed to inline-flex for better alignment */
-    align-items: center;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.95rem;
-    padding: 8px 15px;
-    border-radius: 6px;
-    background-color: rgba(0, 245, 212, 0.05);
-    border: 1px solid rgba(0, 245, 212, 0.1);
-    transition: color 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
-  }
-
-  .profile-contact ul li a .fab,
-  .profile-contact ul li a .fas {
-    margin-right: 8px;
-    font-size: 1.1em;
-    color: var(--accent-color);
-    transition: color 0.3s ease;
-  }
-
-  .profile-contact ul li a:hover {
-    color: var(--accent-color);
-    background-color: rgba(0, 245, 212, 0.15);
-    transform: translateY(-2px);
-  }
-  .profile-contact ul li a:hover .fab,
-  .profile-contact ul li a:hover .fas {
-    color: var(--accent-darker);
-  }
-
-
-  .cta-button {
-    display: inline-block;
-    background: linear-gradient(45deg, var(--accent-color), var(--accent-darker));
-    color: var(--bg-dark);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 12px 30px;
-    border-radius: 50px;
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
-    transition: all 0.3s ease;
-  }
-
-  .cta-button:hover {
-    background: linear-gradient(45deg, var(--accent-darker), var(--accent-color));
-    box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
-    transform: translateY(-3px);
-  }
-  .cta-button:active {
-    transform: translateY(-1px);
-  }
-
-  .profile-footer {
-    margin-top: 30px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    opacity: 0.7;
-  }
-
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .profile-header h1 {
-      font-size: 2.2rem;
+    .tilt {
+      transform-style: preserve-3d;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      will-change: transform;
     }
-    .profile-header h2 {
-      font-size: 1.1rem;
+    .tilt:hover {
+      box-shadow: 0 24px 70px rgba(0,0,0,.4), 0 0 35px rgba(89,243,255,.08);
+      border-color: rgba(255,255,255,.14);
     }
-    .profile-bio p {
-      font-size: 1rem;
-    }
-    .profile-container {
-      padding: 25px 20px;
-      margin: 15px;
-    }
-    .profile-contact ul {
-        flex-direction: column; /* Stack contact links on smaller screens */
-        gap: 10px;
-    }
-    .profile-contact ul li a {
-        justify-content: center; /* Center text content when stacked */
-    }
-  }
 
-  @media (max-width: 480px) {
-    .profile-header h1 {
-      font-size: 1.9rem;
+    @media (max-width: 1100px) {
+      .hero-grid, .about-grid, .footer-card { grid-template-columns: 1fr; }
+      .skills-grid, .timeline-grid, .cve-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .links-grid { grid-template-columns: 1fr; }
     }
-    .profile-header h2 {
-      font-size: 1rem;
+    @media (max-width: 760px) {
+      nav { padding: 10px 0; align-items: start; }
+      .nav-links { gap: 8px; }
+      .hero-card, .radar-card, .terminal-card, .card, .cve-card { padding: 20px; }
+      .hero-stats, .mini-grid, .skills-grid, .timeline-grid, .cve-grid { grid-template-columns: 1fr; }
+      .section-head { flex-direction: column; align-items: start; }
+      .cursor-orb { display: none; }
+      h1 { font-size: clamp(2.45rem, 13vw, 4rem); }
     }
-    .profile-header .logo {
-        width: 60px;
-        height: 60px;
-        font-size: 1.6rem;
-    }
-    .profile-bio p {
-      font-size: 0.95rem;
-    }
-    .cta-button {
-      font-size: 0.9rem;
-      padding: 10px 25px;
-    }
-    .profile-container {
-        padding: 20px 15px;
-    }
-  }
 
-</style>
+    @keyframes pulse { 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.35); opacity:.75; } }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes drift { from { transform: translate3d(-6%, -5%, 0) scale(1); } to { transform: translate3d(6%, 6%, 0) scale(1.1); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes blip { 0%,100%{ transform:scale(.65); opacity:.45; } 50%{ transform:scale(1.25); opacity:1; } }
+    @keyframes grain { to { transform: translate3d(2%, 1%, 0); } }
+    @keyframes gridShift { to { background-position: 0 0, 56px 56px; } }
+  </style>
 </head>
 <body>
+  <div class="progress"></div>
+  <canvas id="particleCanvas" aria-hidden="true"></canvas>
+  <div class="backdrop"></div>
+  <div class="grid"></div>
+  <div class="spotlight"></div>
+  <div class="noise"></div>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div class="cursor-orb"></div>
 
-  <main class="profile-container">
-    <header class="profile-header">
-      <div class="logo">AF</div>
-      <h1>Ali Firas</h1>
-      <h2>Cybersecurity</h2>
-    </header>
+  <div class="nav-wrap">
+    <nav>
+      <a class="brand" href="#top" aria-label="Ali Firas home">
+        <span class="brand-mark"><span>AF</span></span>
+        <span>ALI FIRAS</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link" href="#expertise">Expertise</a>
+        <a class="nav-link" href="#impact">Impact</a>
+        <a class="nav-link" href="#cves">CVEs</a>
+        <a class="nav-link" href="#connect">Connect</a>
+      </div>
+    </nav>
+  </div>
 
-    <section class="profile-bio">
-      <p>A cybersecurity professional dedicated to navigating and securing the digital landscape. Focusing on threat analysis, incident response, and robust security architectures.</p>
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <article class="glass hero-card tilt reveal">
+          <div class="eyebrow"><span class="dot"></span> Cybersecurity Researcher · Developer · Builder</div>
+          <h1>
+            I break,
+            <span class="gradient-text">verify, patch,</span>
+            and build.
+          </h1>
+          <div class="type-line">
+            <span id="typedText"></span>
+            <span class="caret"></span>
+          </div>
+          <p class="hero-copy">
+            I am <strong>Ali Firas</strong>, a source-code-focused cybersecurity researcher and builder with a strong interest in
+            real-world vulnerability discovery, precise proof-of-concept development, technical reporting, and secure product engineering.
+            My work connects <strong>offensive analysis</strong>, <strong>defensive thinking</strong>, and <strong>clean execution</strong> into one workflow.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary magnetic" href="#cves">Explore CVE Portfolio</a>
+            <a class="btn magnetic" href="https://github.com/thesmartshadow/" target="_blank" rel="noreferrer">GitHub Profile</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num" data-count="7">0</div>
+              <div class="label">Listed CVEs</div>
+            </div>
+            <div class="stat">
+              <div class="num" data-count="4">0</div>
+              <div class="label">Core Focus Areas</div>
+            </div>
+            <div class="stat">
+              <div class="num" data-count="100">0</div>
+              <div class="label">Research Mindset</div>
+            </div>
+          </div>
+        </article>
+
+        <div class="hero-side">
+          <article class="glass radar-card tilt reveal">
+            <div class="section-head" style="margin-bottom: 10px;">
+              <div>
+                <h2 style="font-size:1.35rem; margin:0;">Threat Radar</h2>
+                <p style="font-size:.95rem;">Signals across code, logic, trust boundaries, and impact surfaces.</p>
+              </div>
+            </div>
+            <div class="radar" aria-hidden="true">
+              <div class="sweep"></div>
+              <span class="blip b1"></span>
+              <span class="blip b2"></span>
+              <span class="blip b3"></span>
+              <span class="blip b4"></span>
+            </div>
+          </article>
+
+          <article class="glass terminal-card tilt reveal">
+            <div class="terminal-top">
+              <div class="traffic"><span></span><span></span><span></span></div>
+              <span class="mono">research_session.log</span>
+            </div>
+            <div class="terminal-line"><span class="prompt">&gt;</span><span>Focus: source code auditing, PoC validation, disclosure workflow</span></div>
+            <div class="terminal-line"><span class="prompt">&gt;</span><span>Method: reproduce → isolate root cause → measure impact → propose fix</span></div>
+            <div class="terminal-line"><span class="prompt">&gt;</span><span>Style: precise, evidence-driven, patch-aware, publication-ready</span></div>
+            <div class="terminal-line"><span class="prompt">&gt;</span><span class="dim">Current mode: research / reporting / builder mindset</span></div>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <section class="profile-contact">
-      <h3>Connect With Me</h3>
-      <ul>
-        <li><a href="mailto:alifiras@smartshadow.dev" target="_blank" rel="noopener noreferrer"><i class="fas fa-envelope"></i>alifiras@smartshadow.dev</a></li>
-        <li><a href="mailto:alishmery18@gmail.com" target="_blank" rel="noopener noreferrer"><i class="fas fa-envelope-open-text"></i>alishmery18@gmail.com</a></li>
-        <li><a href="https://github.com/thesmartshadow" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i>GitHub</a></li>
-        <li><a href="https://hackerone.com/thesmartshadow" target="_blank" rel="noopener noreferrer"><i class="fas fa-shield-alt"></i>HackerOne</a></li>
-        <li><a href="https://instagram.com/thesmartshadow" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i>Instagram</a></li>
-        <li><a href="https://t.me/thesmartshadow" target="_blank" rel="noopener noreferrer"><i class="fab fa-telegram-plane"></i>Telegram</a></li>
-        <li><a href="https://alifiras.me" target="_blank" rel="noopener noreferrer"><i class="fas fa-globe"></i>Website</a></li>
-        <li><a href="https://x.com/alishmery2" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i>X</a></li>
-      </ul>
-      <a href="mailto:alifiras@smartshadow.dev" class="cta-button">Get in Touch</a>
+    <section class="content" id="about">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <h2>About Me</h2>
+          </div>
+          <p>I treat security research as a disciplined engineering process: understand the system, model the trust boundaries, reproduce the flaw cleanly, then communicate the result in a way maintainers can act on fast.</p>
+        </div>
+
+        <div class="about-grid">
+          <article class="glass card tilt reveal">
+            <p class="lead">
+              My work lives at the intersection of <strong>vulnerability research</strong>, <strong>secure software design</strong>,
+              <strong>proof-driven reporting</strong>, and <strong>technical product building</strong>. I enjoy digging into source code,
+              reasoning about exploitability, and turning findings into clear technical narratives that include root cause,
+              realistic threat models, impact framing, and remediation paths.
+            </p>
+            <div class="chip-wrap">
+              <span class="chip">Source Code Review</span>
+              <span class="chip">PoC Development</span>
+              <span class="chip">Threat Modeling</span>
+              <span class="chip">Patch Validation</span>
+              <span class="chip">Coordinated Disclosure</span>
+              <span class="chip">Developer Workflow</span>
+            </div>
+          </article>
+
+          <article class="glass card tilt reveal">
+            <div class="section-head" style="margin-bottom:12px;">
+              <div>
+                <h2 style="font-size:1.3rem;">Research Identity</h2>
+              </div>
+            </div>
+            <p class="lead muted">
+              I care about findings that are technically honest and practically useful. That means no inflated claims, no weak assumptions,
+              and no vague impact language. I prefer reproducible evidence, exact code paths, realistic attacker models, and fixes that fit maintainers' codebases.
+            </p>
+            <div class="mini-grid">
+              <div class="glass mini-card tilt" style="padding:18px;">
+                <h3>Precision</h3>
+                <p>Root-cause-first analysis with technical clarity and clean reproduction paths.</p>
+              </div>
+              <div class="glass mini-card tilt" style="padding:18px;">
+                <h3>Execution</h3>
+                <p>Move from idea to report, patch, PR, or advisory without losing depth.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <footer class="profile-footer">
-      <p>&copy; <span id="currentYear"></span> Ali Firas. All rights reserved.</p>
-    </footer>
+    <section class="content" id="expertise">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><h2>Core Expertise</h2></div>
+          <p>Security research is strongest when technical depth and communication quality move together. These are the areas that define how I work.</p>
+        </div>
+        <div class="skills-grid">
+          <article class="glass card skill-card tilt reveal">
+            <h3>Vulnerability Research</h3>
+            <p>I analyze application and library behavior for logic flaws, input validation failures, unsafe assumptions, race conditions, file handling issues, and client-side or server-side impact paths.</p>
+            <div class="skill-number">01</div>
+          </article>
+          <article class="glass card skill-card tilt reveal">
+            <h3>Proof-of-Concept Engineering</h3>
+            <p>I convert suspected issues into clean demonstrations that prove the bug, isolate the attack path, and support accurate severity discussions without overclaiming.</p>
+            <div class="skill-number">02</div>
+          </article>
+          <article class="glass card skill-card tilt reveal">
+            <h3>Technical Reporting</h3>
+            <p>I build reports around root cause, conditions, exploitation logic, attack surface, affected versions, remediation direction, and publication-ready language.</p>
+            <div class="skill-number">03</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content" id="impact">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><h2>Impact Workflow</h2></div>
+          <p>The strongest findings usually come from following a repeatable path instead of chasing hype. This is the sequence I lean on the most.</p>
+        </div>
+        <div class="timeline-grid">
+          <article class="glass card timeline-card tilt reveal">
+            <div class="timeline-step"><span class="timeline-step-label">Step</span><span class="timeline-step-num">01</span></div>
+            <h3>Map the Trust Boundary</h3>
+            <p>Find where untrusted input crosses into sensitive logic, file operations, rendering, authorization, or state transitions.</p>
+          </article>
+          <article class="glass card timeline-card tilt reveal">
+            <div class="timeline-step"><span class="timeline-step-label">Step</span><span class="timeline-step-num">02</span></div>
+            <h3>Reproduce Cleanly</h3>
+            <p>Build a minimal but realistic path that demonstrates the flaw with stable evidence and without unnecessary noise.</p>
+          </article>
+          <article class="glass card timeline-card tilt reveal">
+            <div class="timeline-step"><span class="timeline-step-label">Step</span><span class="timeline-step-num">03</span></div>
+            <h3>Frame the Real Risk</h3>
+            <p>Describe what the flaw allows, what constraints matter, and which attack scenarios remain realistic in practice.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content cve-section" id="cves">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><h2>CVE Portfolio</h2></div>
+          <p>A curated list of public identifiers associated with my disclosed work, including linked source references and related tracker IDs.</p>
+        </div>
+
+        <div class="cve-grid">
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-63095</h3>
+                <p>DoS via improper input validation in hello-video-codec.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2025-199991</span>
+              <span class="ref-item">CNNVD-202512-067</span>
+              <span class="ref-item">PT-2025-48451</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-63095" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://www.cve.org/CVERecord?id=CVE-2025-63095" target="_blank" rel="noreferrer">CVE Record</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-59717</h3>
+                <p>Type confusion / filter bypass issue in @digitalocean/do-markdownit.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2025-30235</span>
+              <span class="ref-item">CNNVD-202509-3044</span>
+              <span class="ref-item">PT-2025-38507</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-59717" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://github.com/advisories/GHSA-2h8j-8r9p-849f" target="_blank" rel="noreferrer">GitHub Advisory</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-59716</h3>
+                <p>Unauthenticated user enumeration in ownCloud Guests registration flow.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2025-37881</span>
+              <span class="ref-item">CNNVD-202511-387</span>
+              <span class="ref-item">PT-2025-45141</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-59716" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://www.cve.org/CVERecord?id=CVE-2025-59716" target="_blank" rel="noreferrer">CVE Record</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-67125</h3>
+                <p>Signed integer overflow issue in docopt.cpp with downstream distro tracking.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2026-4308</span>
+              <span class="ref-item">UBUNTU-CVE-2025-67125</span>
+              <span class="ref-item">DEBIAN-CVE-2025-67125</span>
+              <span class="ref-item">PT-2026-4472</span>
+              <span class="ref-item">CNNVD-202601-4006</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-67125" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://www.cve.org/CVERecord?id=CVE-2025-67125" target="_blank" rel="noreferrer">CVE Record</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-67124</h3>
+                <p>TOCTOU + symlink race in miniserve upload finalization path.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2026-4261</span>
+              <span class="ref-item">PT-2026-4471</span>
+              <span class="ref-item">CNNVD-202601-4008</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-67124" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://www.cve.org/CVERecord?id=CVE-2025-67124" target="_blank" rel="noreferrer">CVE Record</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2025-13437</h3>
+                <p>zx cleanup path issue leading to unintended external node_modules deletion.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">EUVD-2025-198297</span>
+              <span class="ref-item">CNNVD-202511-2323</span>
+              <span class="ref-item">PT-2025-47601</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2025-13437" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://github.com/advisories/GHSA-w87r-vg9q-crqm" target="_blank" rel="noreferrer">GitHub Advisory</a>
+            </div>
+          </article>
+
+          <article class="glass cve-card tilt reveal">
+            <div class="cve-top">
+              <div>
+                <h3>CVE-2026-25500</h3>
+                <p>Stored XSS in Rack::Directory via javascript:-prefixed filenames.</p>
+              </div>
+              <span class="tag">Public</span>
+            </div>
+            <div class="ref-list">
+              <span class="ref-item">DEBIAN-CVE-2026-25500</span>
+              <span class="ref-item">UBUNTU-CVE-2026-25500</span>
+              <span class="ref-item">USN-8066-1</span>
+              <span class="ref-item">PT-2026-20325</span>
+              <span class="ref-item">CNNVD-202602-2768</span>
+            </div>
+            <div class="source-links">
+              <a class="source-link" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25500" target="_blank" rel="noreferrer">NVD</a>
+              <a class="source-link" href="https://github.com/advisories/GHSA-whrj-4476-wvmp" target="_blank" rel="noreferrer">GitHub Advisory</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content" id="connect">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><h2>Connect</h2></div>
+          <p>Research, collaboration, responsible disclosure, technical networking, and portfolio access.</p>
+        </div>
+
+        <div class="links-grid">
+          <article class="glass card contact-card tilt reveal">
+            <h3>Contact Channels</h3>
+            <p>Direct channels for research communication, public profiles, and platform presence.</p>
+            <div class="contact-list">
+              <a class="contact-link" href="mailto:firaswq12@gmail.com">firaswq12@gmail.com</a>
+              <a class="contact-link" href="mailto:alifiras@smartshadow.dev">alifiras@smartshadow.dev</a>
+              <a class="contact-link" href="https://hackerone.com/thesmartshadow" target="_blank" rel="noreferrer">HackerOne</a>
+              <a class="contact-link" href="https://x.com/alishmery2" target="_blank" rel="noreferrer">X / Twitter</a>
+              <a class="contact-link" href="https://www.instagram.com/thesmartshadow" target="_blank" rel="noreferrer">Instagram</a>
+              <a class="contact-link" href="https://t.me/thesmartshadow" target="_blank" rel="noreferrer">Telegram</a>
+              <a class="contact-link" href="https://github.com/thesmartshadow/" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </article>
+
+          <article class="glass card contact-card tilt reveal">
+            <h3>Profile Snapshot</h3>
+            <p>
+              Cybersecurity researcher focused on source code, exploitability analysis, technical reporting, and high-signal disclosure workflows.
+              I like findings that stand up technically, read clearly, and help maintainers fix fast.
+            </p>
+            <div class="chip-wrap">
+              <span class="chip">Cybersecurity</span>
+              <span class="chip">Research</span>
+              <span class="chip">Reporting</span>
+              <span class="chip">Builder</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="footer">
+      <div class="container">
+        <article class="glass footer-card tilt reveal">
+          <div>
+            <h2 class="footer-title">Research with proof. Impact with discipline.</h2>
+            <p class="lead muted">Ali Firas - thesmartshadow. Cybersecurity researcher focused on credible findings, clear evidence, strong technical reporting, and public work that holds up under review.</p>
+          </div>
+          <div class="mono">
+            focus: vulnerability research / exploitability analysis<br>
+            workflow: reproduce / validate / report / improve<br>
+            identity: Ali Firas / thesmartshadow
+          </div>
+        </article>
+      </div>
+    </section>
   </main>
 
   <script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-  </script>
+    const root = document.documentElement;
+    const cursor = document.querySelector('.cursor-orb');
+    const magneticItems = document.querySelectorAll('.magnetic');
+    const tiltCards = document.querySelectorAll('.tilt');
+    const revealEls = document.querySelectorAll('.reveal');
+    const typedText = document.getElementById('typedText');
+    const counters = document.querySelectorAll('[data-count]');
 
+    const lines = [
+      'Researching real vulnerabilities in real code.',
+      'Turning evidence into clean technical impact.',
+      'Building reports, patches, and public credibility.'
+    ];
+
+    let lineIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    function typeLoop() {
+      const current = lines[lineIndex];
+      typedText.textContent = deleting
+        ? current.slice(0, charIndex--)
+        : current.slice(0, charIndex++);
+
+      let delay = deleting ? 28 : 48;
+      if (!deleting && charIndex > current.length) {
+        deleting = true;
+        delay = 1300;
+      } else if (deleting && charIndex < 0) {
+        deleting = false;
+        lineIndex = (lineIndex + 1) % lines.length;
+        charIndex = 0;
+        delay = 300;
+      }
+      setTimeout(typeLoop, delay);
+    }
+    typeLoop();
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          if (entry.target.matches('.stat .num')) animateCount(entry.target);
+        }
+      });
+    }, { threshold: .16 });
+
+    revealEls.forEach(el => io.observe(el));
+    counters.forEach(counter => io.observe(counter));
+
+    function animateCount(el) {
+      if (el.dataset.done) return;
+      el.dataset.done = '1';
+      const end = Number(el.dataset.count || 0);
+      const duration = 1400;
+      const start = performance.now();
+      function step(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(end * eased);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function setSpot(x, y) {
+      root.style.setProperty('--spot-x', `${x}px`);
+      root.style.setProperty('--spot-y', `${y}px`);
+      if (cursor) {
+        cursor.style.left = `${x}px`;
+        cursor.style.top = `${y}px`;
+      }
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      setSpot(e.clientX, e.clientY);
+    });
+
+    document.querySelectorAll('a, button, .tilt').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor?.classList.add('active'));
+      el.addEventListener('mouseleave', () => cursor?.classList.remove('active'));
+    });
+
+    magneticItems.forEach(item => {
+      item.addEventListener('mousemove', (e) => {
+        const rect = item.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        item.style.transform = `translate(${x * 0.08}px, ${y * 0.08}px)`;
+      });
+      item.addEventListener('mouseleave', () => {
+        item.style.transform = '';
+      });
+    });
+
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width;
+        const py = (e.clientY - rect.top) / rect.height;
+        const rx = (0.5 - py) * 9;
+        const ry = (px - 0.5) * 11;
+        card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+
+    function onScroll() {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const value = max > 0 ? window.scrollY / max : 0;
+      root.style.setProperty('--scroll', value.toFixed(4));
+    }
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      makeParticles();
+    }
+
+    function makeParticles() {
+      const count = Math.max(26, Math.min(60, Math.floor(window.innerWidth / 28)));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.6 + 0.6,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        glow: Math.random() * 0.7 + 0.2
+      }));
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -20) p.x = window.innerWidth + 20;
+        if (p.x > window.innerWidth + 20) p.x = -20;
+        if (p.y < -20) p.y = window.innerHeight + 20;
+        if (p.y > window.innerHeight + 20) p.y = -20;
+
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 8);
+        gradient.addColorStop(0, `rgba(140, 255, 255, ${0.28 * p.glow})`);
+        gradient.addColorStop(1, 'rgba(140, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255,255,255,${0.55 * p.glow})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i];
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(120, 220, 255, ${0.06 * (1 - dist / 120)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+  </script>
 </body>
 </html>
